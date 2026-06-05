@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= e($title ?? 'Admin') ?> - CMS</title>
+  <title><?= e($title ?? 'Admin') ?> - Manhwa Scraper Admin</title>
   <meta name="robots" content="noindex,nofollow">
   <link rel="stylesheet" href="<?= app_url('/assets/css/app.css') ?>">
 </head>
@@ -12,7 +12,7 @@
   <aside class="admin-sidebar">
     <a class="brand" href="<?= app_url('/admin') ?>">
       <span class="brand-mark">M</span>
-      <span>CMS</span>
+      <span>Manhwa Scraper Admin</span>
     </a>
     <nav>
       <a href="<?= app_url('/admin') ?>">Dashboard</a>
@@ -31,7 +31,7 @@
   <main class="admin-main">
     <header class="admin-topbar">
       <div>
-        <p class="eyebrow">ManhwaLanded PHP</p>
+        <p class="eyebrow">Manhwa Scraper Admin</p>
         <h1><?= e($title ?? 'Admin') ?></h1>
       </div>
     </header>
@@ -42,4 +42,3 @@
   </main>
 </body>
 </html>
-

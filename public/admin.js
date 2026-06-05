@@ -1,4 +1,5 @@
 const DEFAULT_SOURCE = "https://komiktap.info/";
+const ADMIN_BRAND = "Manhwa Scraper Admin";
 const PAGE_SIZE = 25;
 const PANEL_ROUTES = {
   dashboardPanel: "/admin",
@@ -347,7 +348,7 @@ async function loadSettings() {
   const settings = data.settings || {};
   settingsCache = settings;
   const brand = document.querySelector(".admin-brand");
-  if (brand) brand.textContent = `${settings.headerLogoText || "MANHWALANDED"} Admin`;
+  if (brand) brand.textContent = ADMIN_BRAND;
   els.siteTitle.value = settings.siteTitle || "";
   els.metaDescription.value = settings.metaDescription || "";
   els.metaKeywords.value = settings.metaKeywords || "";
@@ -889,7 +890,7 @@ function stageLabel(job) {
 }
 
 function notifyAdmin(title, body) {
-  document.title = `${title} - ManhwaLanded Admin`;
+  document.title = `${title} - ${ADMIN_BRAND}`;
   if (!("Notification" in window)) return;
   if (Notification.permission === "granted") {
     new Notification(title, { body });
