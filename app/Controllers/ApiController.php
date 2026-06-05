@@ -192,6 +192,7 @@ final class ApiController
         $job['urls'] = $urls;
         $job['cookie'] = (string) ($payload['cookie'] ?? '');
         $job['saveImages'] = (bool) ($payload['saveImages'] ?? true);
+        $job['comicType'] = (string) ($payload['comicType'] ?? 'all');
         $job['downloadConcurrency'] = max(1, min(80, (int) ($payload['downloadConcurrency'] ?? 6)));
         $job['chapterConcurrency'] = max(1, min(12, (int) ($payload['chapterConcurrency'] ?? 1)));
         $job['currentUrlIndex'] = 0;
@@ -448,6 +449,16 @@ final class ApiController
         return $root . '/manga/' . ($query ? '?' . $query : '');
     }
 
+    private function forcedComicType(string $comicType): ?string
+    {
+        return match (strtolower(trim($comicType))) {
+            'manhwa' => 'Manhwa',
+            'manga' => 'Manga',
+            'manhua' => 'Manhua',
+            default => null,
+        };
+    }
+
     private function requireAdminJson(): void
     {
         if (!admin_is_logged_in()) {
@@ -678,6 +689,9 @@ final class ApiController
 
                 $url = $urls[$currentUrlIndex];
                 $comic = $scraper->scrapeComicMetadata($url, $cookie, $saveImages);
+                if ($forcedType = $this->forcedComicType((string) ($job['comicType'] ?? 'all'))) {
+                    $comic['type'] = $forcedType;
+                }
                 $chapters = array_values((array) ($comic['chapters'] ?? []));
                 $comicForDb = $comic;
                 $comicForDb['chapters'] = [];

@@ -184,7 +184,7 @@ final class ScraperService
     {
         $listingUrl = $this->listingUrl($sourceUrl, $page);
         $html = $this->fetch($listingUrl, $cookie);
-        $cards = $this->parseListingCards($html, $listingUrl, $savedSlugs);
+        $cards = $this->parseListingCards($html, $listingUrl, $savedSlugs, $comicType);
         $items = $this->filterItemsByType($cards, $comicType);
         $items = array_slice($items, 0, $limit);
 
@@ -197,7 +197,7 @@ final class ScraperService
             $slug = basename($path);
             $title = ucwords(str_replace('-', ' ', $slug));
             $alreadySaved = isset($savedSlugs[$slug]);
-            $type = in_array(strtolower($comicType), ['manhwa', 'manga', 'manhua'], true) ? ucfirst(strtolower($comicType)) : 'Manhwa';
+            $type = $this->typeFromRequestedFilter($comicType) ?? 'Manhwa';
 
             return [
                 'title' => $title,
@@ -243,7 +243,7 @@ final class ScraperService
         return array_values($links);
     }
 
-    private function parseListingCards(string $html, string $baseUrl, array $savedSlugs): array
+    private function parseListingCards(string $html, string $baseUrl, array $savedSlugs, string $requestedType = 'all'): array
     {
         $cards = [];
 
@@ -268,7 +268,7 @@ final class ScraperService
             $image = $image ? $this->absoluteUrl(html_entity_decode($image, ENT_QUOTES, 'UTF-8'), $baseUrl) : '';
             $chapter = trim(strip_tags($this->match('/<div class="epxs"[^>]*>([\s\S]*?)<\/div>/i', $cardHtml) ?: ''));
             $chapterCount = $this->chapterNumber($chapter);
-            $type = $this->typeFromCard($cardHtml);
+            $type = $this->typeFromRequestedFilter($requestedType) ?? $this->typeFromCard($cardHtml);
             $status = trim(strip_tags($this->match('/<span class="status[^"]*"[^>]*>([\s\S]*?)<\/span>/i', $cardHtml) ?: ''));
             $rating = 0.0;
             if (preg_match('/style=["\'][^"\']*width\s*:\s*(\d+(?:\.\d+)?)%/i', $cardHtml, $ratingMatch)) {
@@ -352,11 +352,80 @@ final class ScraperService
 
     private function typeFromCard(string $html): string
     {
-        if (preg_match('/<span class="type\s+([^"\s]+)[^"]*"/i', $html, $match)) {
-            return ucfirst(strtolower($match[1]));
+        if (preg_match('/<span[^>]*class=["\'][^"\']*\btype\b[^"\']*["\'][^>]*>([\s\S]*?)<\/span>/i', $html, $match)) {
+            $type = $this->normalizeComicType(strip_tags($match[1]));
+            if ($type) {
+                return $type;
+            }
+        }
+
+        if (preg_match('/\b(Manhwa|Manhua|Manga)\b/i', strip_tags($html), $match)) {
+            $type = $this->normalizeComicType($match[1]);
+            if ($type) {
+                return $type;
+            }
+        }
+
+        if (preg_match('/<span[^>]*class=["\'][^"\']*\btype\b([^"\']*)["\']/i', $html, $match)) {
+            $type = $this->normalizeComicType($match[1]);
+            if ($type && $type !== 'Manga') {
+                return $type;
+            }
         }
 
         return 'Manhwa';
+    }
+
+    private function typeFromDetail(string $html): string
+    {
+        foreach (['type', 'jenis'] as $label) {
+            $type = $this->normalizeComicType($this->matchLabel($html, $label) ?? '');
+            if ($type) {
+                return $type;
+            }
+        }
+
+        if (preg_match_all('#<a[^>]+href=["\'][^"\']*/(?:genre|genres|tag)/[^"\']*["\'][^>]*>([^<]+)</a>#i', $html, $matches)) {
+            foreach ($matches[1] as $text) {
+                $type = $this->normalizeComicType($text);
+                if ($type) {
+                    return $type;
+                }
+            }
+        }
+
+        if (preg_match('/\b(Manhwa|Manhua|Manga)\b/i', strip_tags($html), $match)) {
+            $type = $this->normalizeComicType($match[1]);
+            if ($type) {
+                return $type;
+            }
+        }
+
+        return 'Manhwa';
+    }
+
+    private function typeFromRequestedFilter(string $comicType): ?string
+    {
+        return $this->normalizeComicType($comicType);
+    }
+
+    private function normalizeComicType(string $value): ?string
+    {
+        $value = strtolower(trim(strip_tags(html_entity_decode($value, ENT_QUOTES, 'UTF-8'))));
+        if ($value === '') {
+            return null;
+        }
+        if (preg_match('/\bmanhwa\b/', $value)) {
+            return 'Manhwa';
+        }
+        if (preg_match('/\bmanhua\b/', $value)) {
+            return 'Manhua';
+        }
+        if (preg_match('/\bmanga\b/', $value)) {
+            return 'Manga';
+        }
+
+        return null;
     }
 
     private function scrapeDetail(string $url, string $cookie, bool $downloadAssets): ?array
@@ -421,7 +490,7 @@ final class ScraperService
             'cover' => $cover,
             'synopsis' => $this->synopsis($xpath),
             'status' => $this->matchLabel($html, 'status'),
-            'type' => $this->matchLabel($html, 'type') ?: 'Manhwa',
+            'type' => $this->typeFromDetail($html),
             'genres' => array_values($genres),
             'chapters' => $chapters,
             'source_url' => $url,
