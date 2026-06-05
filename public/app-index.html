@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ManhwaLanded - Portal Manhwa</title>
+    <link rel="icon" href="/assets/brand/default-favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body class="shinigami-layout">
+    <div class="age-gate" id="ageGate" role="dialog" aria-modal="true" aria-labelledby="ageTitle">
+      <div class="age-panel">
+        <p class="eyebrow">18+ catalog mode</p>
+        <h1 id="ageTitle">ManhwaLanded</h1>
+        <p>Website ini adalah katalog komik dewasa. Lanjutkan hanya jika kamu sudah cukup umur dan punya hak untuk mengakses kontennya.</p>
+        <div class="age-actions">
+          <button class="primary" id="enterSite">Masuk</button>
+          <a href="https://www.google.com" class="secondary">Keluar</a>
+        </div>
+      </div>
+    </div>
+
+    <header class="shin-header">
+      <div class="shin-inner">
+        <a class="shin-brand" href="/" data-route>
+          <span class="shin-logo">K</span>
+          <span>MANHWALANDED</span>
+        </a>
+      </div>
+    </header>
+
+    <div class="app-shell">
+      <main>
+        <section class="view-page home-view" id="homeView">
+          <section class="shin-hero-grid">
+            <div class="hero-feed" id="featuredHero" aria-label="Komik pilihan"></div>
+            <aside class="hero-manhwa-panel" aria-label="Manhwa pilihan">
+              <div class="hero-panel-head">
+                <h2>Manhwa</h2>
+                <a href="#update" data-route>Semua</a>
+              </div>
+              <div class="hero-manhwa-list" id="heroManhwaList"></div>
+            </aside>
+          </section>
+
+          <section class="section-block browse-strip" id="browse">
+            <div class="section-head">
+              <div>
+                <h2>Rekomendasi</h2>
+              </div>
+            </div>
+            <div class="type-tabs" id="typeTabs" aria-label="Filter tipe"></div>
+            <div class="genre-rail" id="genreRail" aria-label="Filter genre"></div>
+            <div class="recommend-list" id="latestList"></div>
+          </section>
+
+          <section class="section-block" id="update">
+            <div class="section-head">
+              <div>
+                <h2>Update</h2>
+              </div>
+            </div>
+            <div class="update-controls">
+              <div class="quick-filter-tabs" id="quickFilterTabs" aria-label="Filter cepat update">
+                <button class="active" type="button" data-quick-filter="all">Semua</button>
+                <button type="button" data-quick-filter="Manhwa">Manhwa</button>
+                <button type="button" data-quick-filter="Manga">Manga</button>
+              </div>
+              <div class="view-tabs" aria-label="Mode tampilan">
+                <button class="active" type="button" data-view-mode="grid" aria-label="Grid">
+                  <span class="view-icon grid-icon" aria-hidden="true"></span>
+                </button>
+                <button type="button" data-view-mode="compact" aria-label="List">
+                  <span class="view-icon list-icon" aria-hidden="true"></span>
+                </button>
+              </div>
+            </div>
+            <div class="filter-strip" aria-label="Filter katalog">
+              <label>
+                Genre
+                <select id="genreFilter"></select>
+              </label>
+              <label>
+                Status
+                <select id="statusFilter">
+                  <option value="all">Semua</option>
+                  <option value="Ongoing">Ongoing</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Hiatus">Hiatus</option>
+                </select>
+              </label>
+              <label>
+                Tipe
+                <select id="typeFilter">
+                  <option value="all">Semua</option>
+                  <option value="Manhwa">Manhwa</option>
+                  <option value="Manga">Manga</option>
+                  <option value="Manhua">Manhua</option>
+                </select>
+              </label>
+              <label>
+                Urut
+                <select id="sortFilter">
+                  <option value="updated">Update</option>
+                  <option value="rating">Rating</option>
+                  <option value="title">A-Z</option>
+                  <option value="chapters">Chapter</option>
+                </select>
+              </label>
+              <button class="ghost" id="resetFilters" type="button">Reset</button>
+            </div>
+
+            <div class="catalog-head">
+              <p><span id="resultCount">0</span> judul ditemukan</p>
+            </div>
+            <div class="comic-grid" id="comicGrid"></div>
+            <nav class="home-pagination" id="homePagination" aria-label="Pagination update"></nav>
+          </section>
+
+          <section class="section-block" id="popular">
+            <div class="section-head">
+              <div>
+                <h2>Populer</h2>
+              </div>
+              <div class="mini-tabs" id="popularTabs" aria-label="Tab populer">
+                <button class="active" type="button" data-range="today">Harian</button>
+                <button type="button" data-range="weekly">Mingguan</button>
+                <button type="button" data-range="all">Semua</button>
+              </div>
+            </div>
+            <ol class="ranking" id="rankingList"></ol>
+          </section>
+
+          <section class="section-block hidden-library" id="latest">
+            <div class="latest-shelf" id="sourceLatestList"></div>
+          </section>
+
+          <section class="section-block hidden-library" id="bookmarks">
+            <div class="bookmark-list" id="bookmarkList"></div>
+          </section>
+        </section>
+
+        <section class="view-page detail-page" id="detailPage" hidden></section>
+        <section class="view-page reader-page" id="readerPage" hidden></section>
+      </main>
+
+      <footer class="shin-footer" id="siteFooter">
+        <div class="shin-brand footer-brand">
+          <span class="shin-logo">K</span>
+          <span>MANHWALANDED</span>
+        </div>
+        <p id="footerText">Copyright ©2026 ManhwaLanded. All rights reserved.</p>
+      </footer>
+    </div>
+
+    <nav class="bottom-nav" aria-label="Navigasi cepat">
+      <a class="active" href="/" data-route data-nav="home"><span>Home</span></a>
+      <a href="/#update" data-route data-nav="update"><span>Update</span></a>
+      <a href="/#popular" data-route data-nav="popular"><span>Populer</span></a>
+    </nav>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

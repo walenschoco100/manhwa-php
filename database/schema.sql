@@ -1,0 +1,79 @@
+CREATE TABLE IF NOT EXISTS admins (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(80) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS settings (
+  setting_key VARCHAR(120) PRIMARY KEY,
+  setting_value TEXT NULL,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS titles (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  slug VARCHAR(180) NOT NULL UNIQUE,
+  title VARCHAR(255) NOT NULL,
+  cover VARCHAR(700) NULL,
+  synopsis MEDIUMTEXT NULL,
+  status VARCHAR(80) NULL,
+  type VARCHAR(80) NULL,
+  rating DECIMAL(3,1) DEFAULT 0,
+  views BIGINT UNSIGNED DEFAULT 0,
+  source_url VARCHAR(700) NULL,
+  updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_titles_updated (updated_at),
+  INDEX idx_titles_status (status),
+  FULLTEXT INDEX ft_titles_search (title, synopsis)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS genres (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  slug VARCHAR(140) NOT NULL UNIQUE,
+  name VARCHAR(140) NOT NULL UNIQUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS title_genres (
+  title_id INT UNSIGNED NOT NULL,
+  genre_id INT UNSIGNED NOT NULL,
+  PRIMARY KEY (title_id, genre_id),
+  CONSTRAINT fk_title_genres_title FOREIGN KEY (title_id) REFERENCES titles(id) ON DELETE CASCADE,
+  CONSTRAINT fk_title_genres_genre FOREIGN KEY (genre_id) REFERENCES genres(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS chapters (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  title_id INT UNSIGNED NOT NULL,
+  slug VARCHAR(180) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  number_value DECIMAL(8,2) DEFAULT NULL,
+  source_url VARCHAR(700) NULL,
+  published_at DATE NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_title_chapter_slug (title_id, slug),
+  INDEX idx_chapters_title (title_id),
+  CONSTRAINT fk_chapters_title FOREIGN KEY (title_id) REFERENCES titles(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS chapter_images (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  chapter_id INT UNSIGNED NOT NULL,
+  sort_order INT UNSIGNED NOT NULL DEFAULT 0,
+  image_url VARCHAR(900) NOT NULL,
+  local_path VARCHAR(700) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_chapter_images_chapter (chapter_id),
+  CONSTRAINT fk_chapter_images_chapter FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS scrape_logs (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  level VARCHAR(30) NOT NULL DEFAULT 'info',
+  message TEXT NOT NULL,
+  context MEDIUMTEXT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_scrape_logs_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

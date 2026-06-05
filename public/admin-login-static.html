@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow,noarchive">
+    <title>Login Admin - ManhwaLanded</title>
+    <link rel="icon" href="/assets/brand/default-favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/admin.css">
+  </head>
+  <body class="admin-page login-page">
+    <main class="login-shell">
+      <form class="panel-card login-card" id="loginForm">
+        <a class="admin-brand" href="/">MANHWALANDED Admin</a>
+        <h1>Login Admin</h1>
+        <p>Masuk untuk mengelola scrape, data komik, homepage, dan SEO.</p>
+        <label>
+          <strong>Username</strong>
+          <input id="usernameInput" type="text" autocomplete="username" placeholder="Masukkan username" autofocus>
+        </label>
+        <label>
+          <strong>Password</strong>
+          <input id="passwordInput" type="password" autocomplete="current-password" placeholder="Masukkan password">
+        </label>
+        <button class="primary" type="submit">Masuk</button>
+        <p class="login-error" id="loginError" hidden></p>
+      </form>
+    </main>
+    <script src="/admin-login.js" type="module"></script>
+  </body>
+</html>

@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow,noarchive">
+    <title>Dashboard Admin - ManhwaLanded</title>
+    <link rel="icon" href="/assets/brand/default-favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/admin.css">
+  </head>
+  <body class="admin-page">
+    <header class="admin-topbar">
+      <a class="admin-brand" href="/admin">MANHWALANDED Admin</a>
+      <button class="menu-toggle" type="button" aria-label="Menu">☰</button>
+    </header>
+
+    <div class="admin-layout">
+      <aside class="admin-sidebar" aria-label="Navigasi admin">
+        <a class="nav-item active" href="/admin" data-panel="dashboardPanel"><span>⌂</span>Dashboard</a>
+        <a class="nav-item" href="/admin/settings" data-panel="settingsPanel"><span>⚙</span>Global Settings</a>
+        <a class="nav-item" href="/admin/homepage" data-panel="homepagePanel"><span>▣</span>Homepage Control</a>
+        <a class="nav-item" href="/admin/seo" data-panel="seoPanel"><span>⌁</span>SEO & Slug</a>
+        <a class="nav-item" href="/admin/scrape" data-panel="scrapePanel"><span>◎</span>Scrape Komik</a>
+        <a class="nav-item" href="/admin/data" data-panel="dataPanel"><span>▤</span>Data Komik</a>
+        <a class="nav-item" href="/admin/tools" data-panel="toolsPanel"><span>◈</span>Tools</a>
+        <a class="nav-item" href="/admin/pages" data-panel="pagesPanel"><span>✎</span>Create Pages</a>
+        <a class="nav-item" href="/admin/menu" data-panel="menuPanel"><span>☷</span>Generate Menu</a>
+        <a class="nav-item" href="/admin/sitemap" data-panel="sitemapPanel"><span>◫</span>Sitemap</a>
+        <a class="nav-item link" href="/"><span>◎</span>View Site</a>
+        <button class="nav-item" id="logoutButton" type="button"><span>⏻</span>Logout</button>
+      </aside>
+
+      <main class="admin-main">
+        <section class="admin-panel active" id="dashboardPanel">
+          <div class="panel-card intro-card">
+            <h1><span>⌂</span> ManhwaLanded Admin <small>dashboard</small></h1>
+            <p>Kelola tampilan website, scrape data Komiktap, dan hapus koleksi manhwa dari satu dashboard.</p>
+            <p>Source default sudah memakai Komiktap, jadi admin tidak perlu mengetik URL sumber secara manual.</p>
+            <div class="stat-row">
+              <article><span>Total Data</span><strong id="totalSaved">0</strong></article>
+              <article><span>Chapter</span><strong id="chapterCount">0</strong></article>
+              <article><span>Cover</span><strong id="coverCount">0</strong></article>
+              <article><span>Image Lokal</span><strong id="imageCount">0</strong></article>
+              <article><span>Storage</span><strong id="storageSize">0 B</strong></article>
+            </div>
+          </div>
+        </section>
+
+        <section class="admin-panel" id="settingsPanel">
+          <form class="panel-card settings-form" id="settingsForm">
+            <h1><span>⚙</span> Global Settings</h1>
+
+            <label>
+              <strong>Meta Title Homepage</strong>
+              <input id="siteTitleInput" type="text" placeholder="ManhwaLanded - Portal Manhwa Bahasa Indonesia">
+              <small>Buat meta title untuk homepage.</small>
+            </label>
+
+            <label>
+              <strong>Meta Description Homepage</strong>
+              <textarea id="metaDescriptionInput" rows="3" placeholder="Deskripsi singkat website"></textarea>
+              <small>Buat meta deskripsi pendek untuk homepage.</small>
+            </label>
+
+            <label>
+              <strong>Meta Keywords Homepage</strong>
+              <textarea id="metaKeywordsInput" rows="3" placeholder="manhwa, manga, manhua"></textarea>
+              <small>Keyword global untuk halaman website.</small>
+            </label>
+
+            <label>
+              <strong>Header Logo Text</strong>
+              <input id="headerLogoTextInput" type="text" placeholder="MANHWALANDED">
+              <small>Teks logo yang muncul di header website.</small>
+            </label>
+
+            <label>
+              <strong>Logo Image URL</strong>
+              <input id="logoUrlInput" type="url" placeholder="Kosongkan untuk memakai logo default">
+              <small>Kosongkan untuk memakai logo default. Bisa diganti kapan saja dengan URL gambar sendiri.</small>
+            </label>
+
+            <label>
+              <strong>Favicon URL</strong>
+              <input id="faviconUrlInput" type="url" placeholder="Kosongkan untuk memakai favicon default">
+              <small>Kosongkan untuk favicon default. Disarankan SVG/PNG square minimal 96x96.</small>
+            </label>
+
+            <label>
+              <strong>OpenGraph Image Default</strong>
+              <input id="ogImageUrlInput" type="url" placeholder="/assets/og-image.jpg atau https://...">
+              <small>Gambar preview ketika halaman dibagikan.</small>
+            </label>
+
+            <label>
+              <strong>Text Footer</strong>
+              <textarea id="footerTextInput" rows="4" placeholder="Copyright text"></textarea>
+              <small>Text support HTML tags sederhana.</small>
+            </label>
+
+            <button class="primary admin-save" type="submit">Save Settings</button>
+          </form>
+        </section>
+
+        <section class="admin-panel" id="homepagePanel">
+          <form class="panel-card settings-form" id="homepageForm">
+            <h1><span>▣</span> Homepage Control</h1>
+            <div class="settings-grid">
+              <label>
+                <strong>Hero Mode</strong>
+                <select id="heroModeInput"><option value="auto">Auto dari populer</option><option value="manual">Manual</option></select>
+                <small>Manual memakai slug di bawah, pisahkan dengan koma.</small>
+              </label>
+              <label>
+                <strong>Hero Slugs</strong>
+                <input id="heroSlugsInput" type="text" placeholder="queen-bee-andrew, secret-class">
+              </label>
+              <label class="hero-picker-row">
+                <strong>Pilih Manhwa Hero</strong>
+                <select id="heroPickerInput">
+                  <option value="">Muat data komik dulu...</option>
+                </select>
+                <small>Pilih satu manhwa untuk menjadi hero utama di homepage.</small>
+              </label>
+              <div class="hero-picker-actions">
+                <button class="secondary" id="setHeroButton" type="button">Jadikan Hero</button>
+                <button class="secondary" id="clearHeroButton" type="button">Kembali Auto</button>
+              </div>
+              <label>
+                <strong>Rekomendasi Mode</strong>
+                <select id="recommendModeInput"><option value="auto">Auto random Manhwa</option><option value="manual">Manual</option></select>
+              </label>
+              <label>
+                <strong>Rekomendasi Slugs</strong>
+                <input id="recommendSlugsInput" type="text" placeholder="slug1, slug2, slug3">
+              </label>
+              <label>
+                <strong>Populer Mode</strong>
+                <select id="popularModeInput"><option value="auto">Auto ranking</option><option value="manual">Manual</option></select>
+              </label>
+              <label>
+                <strong>Populer Slugs</strong>
+                <input id="popularSlugsInput" type="text" placeholder="slug1, slug2, slug3">
+              </label>
+            </div>
+            <h2>Banner Placeholder</h2>
+            <div class="banner-help">
+              <strong>Panduan slot banner</strong>
+              <p>Pilih posisi banner dari daftar, lalu isi gambar dan link tujuan. Rekomendasi rasio: <b>desktop 12:1</b> seperti 1200x100 / 970x90, dan <b>mobile 4:1</b> seperti 320x80. Gunakan gambar lebar agar tetap tajam di semua ukuran layar.</p>
+              <div class="banner-placement-preview" aria-label="Ilustrasi penempatan banner">
+                <span class="mock-header">Header</span>
+                <span class="mock-banner top">home-top</span>
+                <span class="mock-hero">Hero</span>
+                <span class="mock-section">Rekomendasi</span>
+                <span class="mock-banner before-update">home-before-update</span>
+                <span class="mock-section">Update</span>
+                <span class="mock-banner after-update">update-after-grid</span>
+                <span class="mock-banner before-popular">before-popular</span>
+                <span class="mock-section">Populer</span>
+              </div>
+              <span><b>home-top</b> setelah header, sebelum hero</span>
+              <span><b>home-before-update</b> sebelum section Update</span>
+              <span><b>update-after-grid</b> setelah daftar Update</span>
+              <span><b>before-popular</b> sebelum section Populer</span>
+            </div>
+            <div class="banner-manager" id="bannerManager"></div>
+            <button class="secondary" id="addBannerButton" type="button">Tambah Slot Banner</button>
+            <div class="admin-action-row">
+              <button class="primary admin-save" type="submit">Save Homepage</button>
+              <a class="secondary admin-preview-link" href="/" target="_blank">Preview Home</a>
+            </div>
+          </form>
+        </section>
+
+        <section class="admin-panel" id="seoPanel">
+          <form class="panel-card settings-form" id="seoForm">
+            <h1><span>⌁</span> SEO & Slug Manager</h1>
+            <label>
+              <strong>Canonical Base URL</strong>
+              <input id="canonicalUrlInput" type="url" placeholder="https://domainkamu.com">
+              <small>Dipakai untuk canonical URL, robots.txt, dan sitemap.xml.</small>
+            </label>
+            <label class="check-line">
+              <input id="schemaEnabledInput" type="checkbox"> Aktifkan schema manga/chapter
+            </label>
+            <label>
+              <strong>Robots.txt Custom</strong>
+              <textarea id="robotsTextInput" rows="5" placeholder="Kosongkan untuk auto generate"></textarea>
+            </label>
+            <button class="primary admin-save" type="submit">Save SEO</button>
+          </form>
+          <div class="panel-card settings-form">
+            <h2>Slug Manager</h2>
+            <div class="settings-grid">
+              <label><strong>Slug Lama</strong><input id="oldSlugInput" type="text" placeholder="old-slug"></label>
+              <label><strong>Slug Baru</strong><input id="newSlugInput" type="text" placeholder="new-slug"></label>
+            </div>
+            <button class="secondary" id="updateSlugButton" type="button">Update Slug + Redirect</button>
+            <p><a href="/sitemap.xml" target="_blank">Preview sitemap.xml</a> · <a href="/robots.txt" target="_blank">Preview robots.txt</a></p>
+          </div>
+        </section>
+
+        <section class="admin-panel" id="scrapePanel">
+          <div class="panel-card scrape-landing">
+            <h1><span>◎</span> Scrape Data Komik</h1>
+            <p>Pilih alur scrape yang ingin dijalankan. Source default memakai Komiktap, dan semua cover, chapter, serta gambar reader akan disimpan otomatis.</p>
+
+            <div class="scrape-source">
+              <span>Source default</span>
+              <strong>Komiktap</strong>
+            </div>
+
+            <div class="scrape-center-actions" aria-label="Scrape Center">
+              <button class="scrape-center-card" id="scanCatalogButton" type="button">
+                <strong>Scan Source</strong>
+                <span>Ambil katalog Manhwa dari Komiktap dan tandai mana yang baru, lengkap, atau perlu update.</span>
+              </button>
+              <button class="scrape-center-card primary-card" id="scrapeNewCatalogButton" type="button">
+                <strong>Scrape Semua Baru</strong>
+                <span>Scrape semua judul baru dari hasil scan terakhir.</span>
+              </button>
+              <button class="scrape-center-card" id="updateAllButton" type="button">
+                <strong>Update Chapter Baru</strong>
+                <span>Cek semua judul tersimpan dan ambil chapter baru saja.</span>
+              </button>
+            </div>
+
+            <div class="big-actions workflow-actions" aria-label="Pilihan alur scrape">
+              <button class="scrape-workflow active" type="button" data-workflow="new">
+                <strong>Scrape Judul Baru</strong>
+                <span>Tampilkan judul yang belum tersimpan, lalu pilih mana yang ingin diambil.</span>
+              </button>
+              <button class="scrape-workflow" type="button" data-workflow="owned">
+                <strong>Update Koleksi</strong>
+                <span>Ambil ulang semua chapter terbaru dari judul yang sudah ada di website.</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="panel-card scrape-tools">
+            <div class="tool-head">
+              <div>
+                <p>Alur <strong id="modeTitle">JUDUL BARU / UPDATE</strong></p>
+                <h2>Pilih Judul dari Source</h2>
+              </div>
+              <span id="scrapeStatus">Siap scrape.</span>
+            </div>
+
+            <section class="scrape-controls">
+              <label>
+                Tipe
+                <select id="comicTypeInput">
+                  <option value="all">Semua</option>
+                  <option value="manhwa">Manhwa</option>
+                  <option value="manga">Manga</option>
+                  <option value="manhua">Manhua</option>
+                </select>
+              </label>
+              <label>
+                Mode
+                <select id="modeInput">
+                  <option value="update">Update</option>
+                  <option value="popular">Popular</option>
+                  <option value="latest">Latest</option>
+                </select>
+              </label>
+              <label>
+                Popular
+                <select id="popularRangeInput">
+                  <option value="today">Today</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="all">All</option>
+                </select>
+              </label>
+              <label>
+                Max scan page
+                <input id="scanMaxPageInput" type="number" min="1" max="200" value="30">
+              </label>
+              <label>
+                Kecepatan download
+                <select id="downloadConcurrencyInput">
+                  <option value="3">Santai - 3 gambar</option>
+                  <option value="6" selected>Normal - 6 gambar</option>
+                  <option value="12">Cepat - 12 gambar + 2 chapter</option>
+                  <option value="24">Turbo Bulk - 24 gambar + 4 chapter</option>
+                  <option value="48">Ultra Bulk - 48 gambar + 8 chapter</option>
+                  <option value="80">Extreme Bulk - 80 gambar + 12 chapter</option>
+                </select>
+              </label>
+              <label class="cookie-field">
+                Cookie opsional
+                <input id="cookieInput" type="password" placeholder="cf_clearance=...; session=...">
+              </label>
+            </section>
+
+            <div class="scrape-actions">
+              <button class="secondary" id="loadButton" type="button">Muat Daftar</button>
+              <button class="secondary" id="selectAllButton" type="button">Pilih Semua</button>
+              <button class="primary" id="scrapeButton" type="button">Scrape Terpilih</button>
+            </div>
+
+            <section class="scrape-progress" id="scrapeProgress" hidden>
+              <div class="progress-head">
+                <strong id="progressTitle">Menyiapkan scrape...</strong>
+                <span id="progressPercent">0%</span>
+              </div>
+              <div class="progress-track"><span id="progressBar"></span></div>
+              <div class="progress-grid">
+                <span>Manga <strong id="progressManga">0/0</strong></span>
+                <span>Chapter <strong id="progressChapter">0/0</strong></span>
+                <span>Gambar <strong id="progressImage">0</strong></span>
+                <span>ETA <strong id="progressEta">-</strong></span>
+                <span>Speed <strong id="progressSpeed">-</strong></span>
+                <span>Mode <strong id="progressMode">-</strong></span>
+              </div>
+              <div class="progress-subtrack">
+                <span id="progressSubBar"></span>
+              </div>
+              <p id="progressDetail">Belum ada job berjalan.</p>
+              <div class="failed-chapter-list" id="failedChapterList"></div>
+              <div class="scrape-actions">
+                <button class="secondary" id="pauseJobButton" type="button">Pause</button>
+                <button class="secondary" id="resumeJobButton" type="button">Resume</button>
+                <button class="danger" id="cancelJobButton" type="button">Cancel</button>
+                <button class="secondary" id="retryFailedButton" type="button">Retry Gagal</button>
+              </div>
+            </section>
+          </div>
+
+          <section class="panel-card scheduler-panel">
+            <div class="panel-title">
+              <div>
+                <h2>Auto Update Scheduler</h2>
+                <p>Jalankan update chapter baru otomatis tanpa membuka dashboard.</p>
+              </div>
+              <span id="schedulerStatus">Scheduler belum aktif.</span>
+            </div>
+            <div class="scheduler-grid">
+              <label class="check-row">
+                <input id="schedulerEnabledInput" type="checkbox">
+                Aktifkan scheduler
+              </label>
+              <label>
+                Jam update harian
+                <input id="schedulerTimeInput" type="time" value="03:00">
+              </label>
+              <label>
+                Interval tambahan
+                <select id="schedulerIntervalInput">
+                  <option value="0">Tidak pakai interval</option>
+                  <option value="3">Setiap 3 jam</option>
+                  <option value="6">Setiap 6 jam</option>
+                  <option value="12">Setiap 12 jam</option>
+                  <option value="24">Setiap 24 jam</option>
+                </select>
+              </label>
+            </div>
+            <div class="scrape-actions">
+              <button class="primary" id="saveSchedulerButton" type="button">Simpan Scheduler</button>
+              <button class="secondary" id="runSchedulerNowButton" type="button">Update Sekarang</button>
+            </div>
+          </section>
+
+          <section class="panel-card source-panel">
+            <div class="panel-title">
+              <h2>Daftar Komik dari Source</h2>
+              <span id="sourceHint">Pilih mode lalu muat daftar.</span>
+            </div>
+            <section class="scrape-grid" id="scrapeGrid"></section>
+            <nav class="source-pagination" id="sourcePagination" aria-label="Pagination daftar source"></nav>
+          </section>
+
+          <section class="panel-card">
+            <div class="panel-title"><h2>Log Scrape</h2><button class="secondary" id="refreshLogsButton" type="button">Refresh Log</button></div>
+            <div class="log-list" id="scrapeLogList"></div>
+          </section>
+        </section>
+
+        <section class="admin-panel" id="dataPanel">
+          <div class="panel-card library-panel">
+            <div class="panel-title">
+              <h1><span>▤</span> Data Komik</h1>
+              <span><strong id="libraryCount">0</strong> judul tersimpan</span>
+            </div>
+            <div class="library-actions">
+              <input id="librarySearchInput" type="search" placeholder="Cari manga/chapter...">
+              <select id="libraryTypeFilter"><option value="all">Semua tipe</option><option>Manhwa</option><option>Manga</option><option>Manhua</option></select>
+              <select id="libraryStatusFilter"><option value="all">Semua status</option><option>Ongoing</option><option>Completed</option><option>Hiatus</option></select>
+              <select id="libraryCompletenessFilter"><option value="all">Semua kualitas</option><option value="complete">Lengkap</option><option value="missing">Belum lengkap</option></select>
+              <button class="secondary" id="refreshLibraryButton" type="button">Refresh</button>
+              <button class="secondary" id="selectSavedAllButton" type="button">Pilih Semua</button>
+              <button class="danger" id="deleteSelectedButton" type="button">Hapus Terpilih</button>
+            </div>
+            <div class="bulk-bar">
+              <select id="bulkTypeInput"><option value="">Type: tidak berubah</option><option>Manhwa</option><option>Manga</option><option>Manhua</option></select>
+              <select id="bulkStatusInput"><option value="">Status: tidak berubah</option><option>Ongoing</option><option>Completed</option><option>Hiatus</option></select>
+              <input id="bulkGenresInput" type="text" placeholder="Genre bulk, pisahkan koma">
+              <button class="secondary" id="bulkUpdateButton" type="button">Apply Bulk</button>
+            </div>
+            <div class="saved-list" id="savedList"></div>
+          </div>
+        </section>
+
+        <section class="admin-panel" id="toolsPanel">
+          <div class="panel-card">
+            <h1><span>◈</span> Tools</h1>
+            <div class="big-actions">
+              <button class="scrape-workflow" id="rebuildThumbButton" type="button"><strong>Rebuild Thumbnail</strong><span>Generate ulang thumbnail permanen untuk chapter terpilih/semua.</span></button>
+              <button class="scrape-workflow" id="scanBrokenButton" type="button"><strong>Cek Broken Image</strong><span>Scan file cover, thumbnail, dan image chapter yang hilang.</span></button>
+              <button class="scrape-workflow" id="resetViewsButton" type="button"><strong>Reset Ranking Manual</strong><span>Kosongkan pin populer manual jika ingin kembali auto.</span></button>
+            </div>
+            <div class="tool-output" id="toolOutput"></div>
+          </div>
+        </section>
+
+        <section class="admin-panel" id="pagesPanel"><div class="panel-card empty-panel">Create Pages akan disiapkan setelah struktur halaman final.</div></section>
+        <section class="admin-panel" id="menuPanel"><div class="panel-card empty-panel">Generate Menu akan disiapkan setelah menu custom aktif.</div></section>
+        <section class="admin-panel" id="sitemapPanel"><div class="panel-card empty-panel">Sitemap akan mengikuti data manhwa yang tersimpan.</div></section>
+      </main>
+    </div>
+
+    <footer class="admin-footer"><a href="/">ManhwaLanded</a> Admin Dashboard</footer>
+
+    <script src="/admin.js" type="module"></script>
+  </body>
+</html>

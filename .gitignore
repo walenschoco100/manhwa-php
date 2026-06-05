@@ -1,0 +1,30 @@
+.DS_Store
+Thumbs.db
+
+# Local install/runtime files
+storage/*
+!storage/.gitkeep
+!storage/jobs/
+storage/jobs/*
+!storage/jobs/.gitkeep
+!storage/sessions/
+storage/sessions/*
+!storage/sessions/.gitkeep
+
+# Scraped/downloaded media. Keep only committed default/static assets.
+public/assets/*
+!public/assets/.gitkeep
+!public/assets/brand/
+!public/assets/brand/**
+!public/assets/css/
+!public/assets/css/**
+!public/assets/covers/
+public/assets/covers/*
+!public/assets/covers/.gitkeep
+!public/assets/chapters/
+public/assets/chapters/*
+!public/assets/chapters/.gitkeep
+
+# Local logs and temp output
+*.log
+*.tmp
