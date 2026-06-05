@@ -130,6 +130,7 @@ let workflow = "new";
 let isLoadingSource = false;
 let activeJobId = localStorage.getItem("manhwa-portal-active-scrape-job") || "";
 let progressTimer = null;
+let progressPollFailures = 0;
 let settingsCache = {};
 const sourceCache = new Map();
 const selectedUrls = new Set();
@@ -257,7 +258,7 @@ function resetSourceList() {
 async function loadScheduler() {
   try {
     const response = await fetch("/api/scheduler");
-    const data = await response.json();
+    const data = await readApiJson(response, "Gagal membaca respons scheduler.");
     if (!response.ok || !data.ok) throw new Error(data.error || "Gagal memuat scheduler.");
     renderScheduler(data.scheduler || {});
   } catch (error) {
@@ -289,7 +290,7 @@ async function saveSchedulerSettings() {
         cookie: els.cookie.value.trim()
       })
     });
-    const data = await response.json();
+    const data = await readApiJson(response, "Gagal membaca respons scheduler.");
     if (!response.ok || !data.ok) throw new Error(data.error || "Gagal menyimpan scheduler.");
     renderScheduler(data.scheduler);
     setStatus("Scheduler tersimpan.", "");
@@ -307,7 +308,7 @@ async function runSchedulerNow() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ cookie: els.cookie.value.trim() })
     });
-    const data = await response.json();
+    const data = await readApiJson(response, "Gagal membaca respons scheduler.");
     if (!response.ok || !data.ok) throw new Error(data.error || "Gagal menjalankan update sekarang.");
     await loadScheduler();
     startTrackingJob(data);
@@ -342,7 +343,7 @@ function renderOwnedSourceList() {
 
 async function loadSettings() {
   const response = await fetch("/api/settings");
-  const data = await response.json();
+  const data = await readApiJson(response, "Gagal membaca respons settings.");
   if (!response.ok || !data.ok) throw new Error(data.error || "Gagal memuat settings.");
 
   const settings = data.settings || {};
@@ -394,7 +395,7 @@ async function saveSettings(event) {
       ogImageUrl: els.ogImageUrl?.value || settingsCache.ogImageUrl || ""
     })
   });
-  const data = await response.json();
+  const data = await readApiJson(response, "Gagal membaca respons settings.");
   if (!response.ok || !data.ok) {
     setStatus(data.error || "Gagal menyimpan settings.", "error");
     return;
@@ -451,7 +452,7 @@ async function saveSettingsPayload(payload, successText) {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ ...settingsCache, ...payload })
   });
-  const data = await response.json();
+  const data = await readApiJson(response, "Gagal membaca respons settings.");
   if (!response.ok || !data.ok) {
     setStatus(data.error || "Gagal menyimpan settings.", "error");
     return;
@@ -463,7 +464,7 @@ async function saveSettingsPayload(payload, successText) {
 
 async function refreshStats() {
   const response = await fetch("/api/stats");
-  const data = await response.json();
+  const data = await readApiJson(response, "Gagal membaca statistik.");
   els.total.textContent = data.total || 0;
   els.chapterCount.textContent = data.chapters || 0;
   els.coverCount.textContent = data.savedImages || 0;
@@ -474,7 +475,7 @@ async function refreshStats() {
 
 async function refreshLibrary() {
   const response = await fetch("/api/comics");
-  const data = await response.json();
+  const data = await readApiJson(response, "Gagal membaca library.");
   if (!response.ok || !data.ok) throw new Error(data.error || "Gagal memuat library.");
 
   savedItems = data.results || [];
@@ -532,7 +533,7 @@ async function loadSourceList() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(basePayload())
     });
-    const data = await response.json();
+    const data = await readApiJson(response, "Gagal membaca daftar sumber.");
     if (!response.ok || !data.ok) throw new Error(data.error || "Gagal memuat daftar sumber.");
 
     sourceItems = data.results || [];
@@ -553,7 +554,7 @@ async function loadSourceList() {
 async function loadSourceCatalog() {
   try {
     const response = await fetch("/api/source-catalog");
-    const data = await response.json();
+    const data = await readApiJson(response, "Gagal membaca katalog sumber.");
     if (!response.ok || !data.ok) throw new Error(data.error || "Gagal memuat cache katalog.");
     catalogItems = data.catalog?.items || [];
     if (catalogItems.length) {
@@ -581,7 +582,7 @@ async function scanSourceCatalog() {
         maxPages: Number(els.scanMaxPage?.value || 30)
       })
     });
-    const data = await response.json();
+    const data = await readApiJson(response, "Gagal membaca hasil scan katalog.");
     if (!response.ok || !data.ok) throw new Error(data.error || "Gagal scan katalog.");
     catalogItems = data.catalog?.items || [];
     sourceItems = catalogItems;
@@ -626,7 +627,7 @@ async function updateAllComics() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(basePayload())
     });
-    const data = await response.json();
+    const data = await readApiJson(response, "Gagal membaca respons update.");
     if (!response.ok || !data.ok) throw new Error(data.error || "Gagal membuat job update.");
     startTrackingJob(data);
   } catch (error) {
@@ -650,7 +651,7 @@ async function createScrapeJobFromUrls(urls, options = {}) {
         jobKind: options.jobKind || "manual"
       })
     });
-    const data = await response.json();
+    const data = await readApiJson(response, "Gagal membaca respons scrape.");
     if (!response.ok || !data.ok) throw new Error(data.error || "Scrape gagal.");
     startTrackingJob(data);
   } catch (error) {
@@ -661,10 +662,31 @@ async function createScrapeJobFromUrls(urls, options = {}) {
 
 function startTrackingJob(data) {
   activeJobId = data.jobId;
+  progressPollFailures = 0;
   localStorage.setItem("manhwa-portal-active-scrape-job", activeJobId);
   selectedUrls.clear();
   renderJobProgress(data.job);
   pollScrapeJob(activeJobId);
+}
+
+async function readApiJson(response, fallbackMessage = "Respons API tidak valid.") {
+  const text = await response.text();
+  if (!text.trim()) {
+    const error = new Error("Respons API kosong dari server. Progress akan dicoba lagi.");
+    error.transient = true;
+    error.status = response.status;
+    throw error;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch (parseError) {
+    const preview = text.replace(/\s+/g, " ").trim().slice(0, 180);
+    const error = new Error(preview ? `${fallbackMessage} Preview: ${preview}` : fallbackMessage);
+    error.transient = true;
+    error.status = response.status;
+    throw error;
+  }
 }
 
 function renderCatalogHint(catalog = {}) {
@@ -696,9 +718,10 @@ async function pollScrapeJob(jobId) {
 
   try {
     const response = await fetch(`/api/scrape-job?id=${encodeURIComponent(jobId)}`);
-    const data = await response.json();
+    const data = await readApiJson(response, "Gagal membaca progress scrape.");
     if (!response.ok || !data.ok) throw new Error(data.error || "Gagal membaca progress scrape.");
 
+    progressPollFailures = 0;
     renderJobProgress(data.job);
 
     if (data.job.status === "completed") {
@@ -736,6 +759,14 @@ async function pollScrapeJob(jobId) {
     setScrapeBusy(true);
     progressTimer = setTimeout(() => pollScrapeJob(jobId), 1200);
   } catch (error) {
+    if (activeJobId === jobId && (error.transient || error.name === "TypeError") && progressPollFailures < 10) {
+      progressPollFailures += 1;
+      const delay = Math.min(12000, 1500 + progressPollFailures * 1000);
+      setStatus(`Respons progress terputus sementara. Mencoba lagi ${progressPollFailures}/10...`, "running");
+      setScrapeBusy(true);
+      progressTimer = setTimeout(() => pollScrapeJob(jobId), delay);
+      return;
+    }
     setStatus(error.message, "error");
     setScrapeBusy(false);
   }
@@ -759,7 +790,10 @@ function renderJobProgress(job) {
   els.progressImage.textContent = String(job.doneImages || 0);
   if (els.progressEta) els.progressEta.textContent = estimateEta(job);
   if (els.progressSpeed) els.progressSpeed.textContent = scrapeSpeedLabel(job);
-  if (els.progressMode) els.progressMode.textContent = `${job.downloadConcurrency || 6} img / ${job.chapterConcurrency || 1} ch`;
+  if (els.progressMode) {
+    const mode = job.runtimeMode === "poll-safe" ? "poll aman" : "worker";
+    els.progressMode.textContent = `${job.effectiveDownloadConcurrency || job.downloadConcurrency || 6} img / ${job.effectiveChapterConcurrency || job.chapterConcurrency || 1} ch (${mode})`;
+  }
   if (els.progressSubBar) els.progressSubBar.style.width = `${subPercent}%`;
   els.progressDetail.textContent = [
     [job.currentTitle, job.currentChapter].filter(Boolean).join(" - ") || "Menunggu proses berikutnya...",
@@ -822,7 +856,7 @@ async function controlJob(action) {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ id: activeJobId, action })
   });
-  const data = await response.json();
+  const data = await readApiJson(response, "Gagal membaca respons kontrol job.");
   if (!response.ok || !data.ok) {
     setStatus(data.error || "Gagal mengontrol job.", "error");
     return;
@@ -847,7 +881,7 @@ async function retryFailedJob(chapterUrl = "") {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ id: activeJobId, chapterUrl, ...basePayload() })
   });
-  const data = await response.json();
+  const data = await readApiJson(response, "Gagal membaca respons retry.");
   if (!response.ok || !data.ok) {
     setStatus(data.error || "Gagal retry.", "error");
     return;
@@ -1127,7 +1161,7 @@ async function deleteComics(slugs) {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ slugs, deleteAssets: true })
     });
-    const data = await response.json();
+    const data = await readApiJson(response, "Gagal membaca respons hapus data.");
     if (!response.ok || !data.ok) throw new Error(data.error || "Gagal menghapus data.");
 
     selectedSlugs.clear();
@@ -1156,7 +1190,7 @@ async function bulkUpdateSelected() {
       genres: els.bulkGenres.value
     })
   });
-  const data = await response.json();
+  const data = await readApiJson(response, "Gagal membaca respons bulk update.");
   if (!response.ok || !data.ok) {
     setStatus(data.error || "Bulk update gagal.", "error");
     return;
@@ -1172,7 +1206,7 @@ async function rebuildThumbnails(slugs = [...selectedSlugs]) {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ slugs })
   });
-  const data = await response.json();
+  const data = await readApiJson(response, "Gagal membaca respons thumbnail.");
   if (!response.ok || !data.ok) {
     setStatus(data.error || "Rebuild thumbnail gagal.", "error");
     return;
@@ -1202,7 +1236,7 @@ async function pinHomepageSlug(target, slug) {
 async function scanBrokenImages() {
   setStatus("Scanning broken image...", "running");
   const response = await fetch("/api/scan-broken-images");
-  const data = await response.json();
+  const data = await readApiJson(response, "Gagal membaca respons scan image.");
   if (!response.ok || !data.ok) {
     setStatus(data.error || "Scan gagal.", "error");
     return;
@@ -1219,7 +1253,7 @@ async function scanBrokenImages() {
 async function loadScrapeLogs() {
   if (!els.scrapeLogList) return;
   const response = await fetch("/api/scrape-logs");
-  const data = await response.json();
+  const data = await readApiJson(response, "Gagal membaca log scrape.");
   const logs = data.logs || [];
   els.scrapeLogList.innerHTML = logs.length ? logs.map(log => `
     <article>
@@ -1236,7 +1270,7 @@ async function updateSlug() {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ from: els.oldSlug.value, to: els.newSlug.value })
   });
-  const data = await response.json();
+  const data = await readApiJson(response, "Gagal membaca respons update slug.");
   if (!response.ok || !data.ok) {
     setStatus(data.error || "Update slug gagal.", "error");
     return;

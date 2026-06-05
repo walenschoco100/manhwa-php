@@ -163,6 +163,7 @@ final class ApiController
 
     public function scrapeSelected(): void
     {
+        $this->extendScrapeRuntime();
         $this->requireAdminJson();
         $payload = $this->input();
         $urls = array_values(array_filter((array) ($payload['urls'] ?? []), 'is_string'));
@@ -196,6 +197,7 @@ final class ApiController
 
     public function scrapeUpdateAll(): void
     {
+        $this->extendScrapeRuntime();
         $this->requireAdminJson();
         $urls = array_values(array_filter(array_map(static fn ($comic) => $comic['sourceUrl'] ?? '', $this->legacyComics())));
         if (!$urls) {
@@ -209,12 +211,18 @@ final class ApiController
 
     public function scrapeJob(): void
     {
+        $this->extendScrapeRuntime();
         $this->requireAdminJson();
         $id = (string) ($_GET['id'] ?? '');
         $job = $id ? $this->readJob($id) : null;
         if (!$job) {
             $this->json(['ok' => false, 'error' => 'Job tidak ditemukan.'], 404);
             return;
+        }
+        if (($job['workerMode'] ?? 'poll') === 'background' && $this->jobIsStale($job, 600)) {
+            $job['workerMode'] = 'poll';
+            $job['message'] = 'Worker background tidak merespons, lanjut via polling aman...';
+            $this->saveJob($job);
         }
         if (($job['workerMode'] ?? 'poll') !== 'background') {
             $job = $this->processJobStep($job);
@@ -336,6 +344,24 @@ final class ApiController
 
     public function runScrapeJob(string $id): void
     {
+        $this->extendScrapeRuntime();
+        register_shutdown_function(function () use ($id): void {
+            $error = error_get_last();
+            if (!$error || !in_array($error['type'] ?? 0, [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+                return;
+            }
+
+            $job = $this->readJob($id);
+            if (!$job || !in_array($job['status'] ?? '', ['running', 'queued'], true)) {
+                return;
+            }
+
+            $job['workerMode'] = 'poll';
+            $job['lastWorkerError'] = (string) ($error['message'] ?? 'Unknown worker error');
+            $job['message'] = 'Worker background terhenti, lanjut via polling aman...';
+            $this->saveJob($job);
+        });
+
         $job = $this->readJob($id);
         while ($job && in_array($job['status'] ?? '', ['running', 'queued'], true)) {
             $job['workerStartedAt'] ??= date(DATE_ATOM);
@@ -586,6 +612,15 @@ final class ApiController
         $saveImages = (bool) ($job['saveImages'] ?? true);
         $downloadConcurrency = max(1, min(80, (int) ($job['downloadConcurrency'] ?? 6)));
         $chapterConcurrency = max(1, min(12, (int) ($job['chapterConcurrency'] ?? 1)));
+        if (($job['workerMode'] ?? 'poll') !== 'background') {
+            $downloadConcurrency = min($downloadConcurrency, 24);
+            $chapterConcurrency = min($chapterConcurrency, 2);
+            $job['runtimeMode'] = 'poll-safe';
+        } else {
+            $job['runtimeMode'] = 'background';
+        }
+        $job['effectiveDownloadConcurrency'] = $downloadConcurrency;
+        $job['effectiveChapterConcurrency'] = $chapterConcurrency;
         $currentUrlIndex = (int) ($job['currentUrlIndex'] ?? 0);
 
         try {
@@ -740,7 +775,21 @@ final class ApiController
             mkdir(STORAGE_PATH . '/jobs', 0755, true);
         }
         $job['updatedAt'] = date(DATE_ATOM);
-        file_put_contents(STORAGE_PATH . '/jobs/' . basename((string) $job['id']) . '.json', json_encode($job, JSON_UNESCAPED_SLASHES), LOCK_EX);
+        $id = basename((string) $job['id']);
+        $file = STORAGE_PATH . '/jobs/' . $id . '.json';
+        $tmp = STORAGE_PATH . '/jobs/' . $id . '.' . getmypid() . '.tmp';
+        $json = json_encode($job, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        if ($json === false) {
+            throw new \RuntimeException('Gagal encode progress job.');
+        }
+        if (file_put_contents($tmp, $json, LOCK_EX) === false) {
+            throw new \RuntimeException('Gagal menulis progress job.');
+        }
+        @chmod($tmp, 0644);
+        if (!@rename($tmp, $file)) {
+            @unlink($tmp);
+            throw new \RuntimeException('Gagal menyimpan progress job.');
+        }
     }
 
     public function readJob(string $id): ?array
@@ -749,8 +798,33 @@ final class ApiController
         if (!is_file($file)) {
             return null;
         }
-        $json = json_decode((string) file_get_contents($file), true);
-        return is_array($json) ? $json : null;
+        for ($attempt = 0; $attempt < 2; $attempt++) {
+            $contents = file_get_contents($file);
+            if ($contents === false || trim($contents) === '') {
+                usleep(50000);
+                continue;
+            }
+            $json = json_decode($contents, true);
+            if (is_array($json)) {
+                return $json;
+            }
+            usleep(50000);
+        }
+        return null;
+    }
+
+    private function extendScrapeRuntime(): void
+    {
+        @ignore_user_abort(true);
+        if (function_exists('set_time_limit') && !$this->functionDisabled('set_time_limit')) {
+            @set_time_limit(0);
+        }
+    }
+
+    private function jobIsStale(array $job, int $seconds): bool
+    {
+        $timestamp = strtotime((string) ($job['workerHeartbeatAt'] ?? $job['updatedAt'] ?? ''));
+        return $timestamp > 0 && (time() - $timestamp) > $seconds;
     }
 
     private function startJobWorker(string $jobId): bool
@@ -813,6 +887,7 @@ final class ApiController
     {
         http_response_code($status);
         header('Content-Type: application/json; charset=utf-8');
-        echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        echo $json === false ? '{"ok":false,"error":"Gagal encode JSON."}' : $json;
     }
 }
