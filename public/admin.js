@@ -1,6 +1,7 @@
 const DEFAULT_SOURCE = "https://komiktap.info/";
 const ADMIN_BRAND = "Manhwa Scraper Admin";
 const PAGE_SIZE = 25;
+const DEFAULT_DOWNLOAD_CONCURRENCY = 80;
 const PANEL_ROUTES = {
   dashboardPanel: "/admin",
   settingsPanel: "/admin/settings",
@@ -137,6 +138,8 @@ const sourceCache = new Map();
 const selectedUrls = new Set();
 const selectedSlugs = new Set();
 
+if (els.downloadConcurrency) els.downloadConcurrency.value = String(DEFAULT_DOWNLOAD_CONCURRENCY);
+
 init();
 
 async function init() {
@@ -170,7 +173,7 @@ function bindEvents() {
   els.updateSlug?.addEventListener("click", updateSlug);
   els.load.addEventListener("click", () => {
     currentPage = 1;
-    loadSourceList();
+    loadSourceList({ preserveSelection: false });
   });
   els.scanCatalog?.addEventListener("click", scanSourceCatalog);
   els.scrapeNewCatalog?.addEventListener("click", scrapeNewFromCatalog);
@@ -217,7 +220,7 @@ function bindEvents() {
       showPanel("scrapePanel", true);
       currentPage = 1;
       syncTitle();
-      loadSourceList();
+      loadSourceList({ preserveSelection: false });
     });
   });
 
@@ -230,7 +233,7 @@ function bindEvents() {
       renderPagination();
       return;
     }
-    loadSourceList();
+    loadSourceList({ preserveSelection: true });
   });
 }
 
@@ -253,7 +256,7 @@ function resetSourceList() {
   selectedUrls.clear();
   renderResults([], { selectable: true });
   renderPagination();
-  els.sourceHint.textContent = workflow === "owned" ? "Klik Muat Koleksi untuk melihat daftar tersimpan." : "Klik Muat Daftar untuk melihat hasil.";
+  els.sourceHint.textContent = "Klik Muat Daftar untuk melihat hasil.";
 }
 
 async function loadScheduler() {
@@ -320,26 +323,13 @@ async function runSchedulerNow() {
 }
 
 function setWorkflow(nextWorkflow) {
-  workflow = nextWorkflow === "owned" ? "owned" : "new";
+  workflow = "new";
   currentPage = 1;
   selectedUrls.clear();
   syncTitle();
 
-  if (workflow === "owned") {
-    renderOwnedSourceList();
-    setStatus("Mode update koleksi aktif. Tombol update akan mengambil ulang semua judul tersimpan.", "");
-    return;
-  }
-
   resetSourceList();
   setStatus("Mode judul baru aktif. Judul yang sudah tersimpan akan disembunyikan dari daftar.", "");
-}
-
-function renderOwnedSourceList() {
-  sourceItems = savedItems.filter(item => item.sourceUrl);
-  renderResults(sourceItems, { selectable: false });
-  renderPagination();
-  els.sourceHint.textContent = `${sourceItems.length} judul tersimpan siap dicek ulang dari Komiktap.`;
 }
 
 async function loadSettings() {
@@ -487,7 +477,6 @@ async function refreshLibrary() {
   els.coverCount.textContent = savedItems.filter(item => item.cover).length;
   renderSavedList();
   renderHeroPicker();
-  if (workflow === "owned") renderOwnedSourceList();
 }
 
 function renderHeroPicker() {
@@ -501,29 +490,29 @@ function renderHeroPicker() {
     : `<option value="">Belum ada Manhwa tersimpan</option>`;
 }
 
-async function loadSourceList() {
-  if (workflow === "owned") {
-    renderOwnedSourceList();
-    return;
-  }
-
+async function loadSourceList(options = {}) {
+  const preserveSelection = options.preserveSelection === true;
   catalogItems = [];
   const cacheKey = JSON.stringify(basePayload());
   const cached = sourceCache.get(cacheKey);
   if (cached) {
     sourceItems = cached.results || [];
-    selectedUrls.clear();
+    if (!preserveSelection) selectedUrls.clear();
     renderResults(sourceItems, { selectable: true });
     renderPagination(cached.page);
     els.sourceHint.textContent = `${cached.count} ${typeLabel()} dari cache · ${filterLabel(cached.filters)} · ${cached.listingUrl || ""}`;
-    setStatus(`${cached.count} ${typeLabel()} ditemukan dari ${filterLabel(cached.filters)}. Centang judul yang ingin diambil.`, "");
+    if (preserveSelection && selectedUrls.size) {
+      updateSelectionStatus();
+    } else {
+      setStatus(`${cached.count} ${typeLabel()} ditemukan dari ${filterLabel(cached.filters)}. Centang judul yang ingin diambil.`, "");
+    }
     return;
   }
 
   setStatus(`Mengambil ${typeLabel()} dari Komiktap...`, "running");
   isLoadingSource = true;
   els.load.disabled = true;
-  selectedUrls.clear();
+  if (!preserveSelection) selectedUrls.clear();
   syncTitle();
   renderSourceLoading();
   renderPagination();
@@ -542,7 +531,11 @@ async function loadSourceList() {
     renderResults(sourceItems, { selectable: true });
     renderPagination();
     els.sourceHint.textContent = `${data.count} ${typeLabel()} dari ${filterLabel(data.filters)} · ${data.listingUrl}`;
-    setStatus(`${data.count} ${typeLabel()} ditemukan dari ${filterLabel(data.filters)}. Centang judul yang ingin diambil.`, "");
+    if (preserveSelection && selectedUrls.size) {
+      updateSelectionStatus();
+    } else {
+      setStatus(`${data.count} ${typeLabel()} ditemukan dari ${filterLabel(data.filters)}. Centang judul yang ingin diambil.`, "");
+    }
   } catch (error) {
     setStatus(error.message, "error");
   } finally {
@@ -698,20 +691,18 @@ function renderCatalogHint(catalog = {}) {
 }
 
 async function scrapeSelected() {
-  const urls = workflow === "owned"
-    ? savedItems.filter(item => item.sourceUrl).map(item => item.sourceUrl)
-    : [...selectedUrls];
+  const urls = [...selectedUrls];
 
   if (urls.length === 0) {
-    setStatus(workflow === "owned" ? "Belum ada koleksi tersimpan yang punya source URL." : "Pilih minimal satu judul dulu dari daftar.", "error");
+    setStatus("Pilih minimal satu judul dulu dari daftar.", "error");
     return;
   }
 
   syncTitle();
   await createScrapeJobFromUrls(urls, {
-    smartUpdate: workflow === "owned",
-    jobKind: workflow === "owned" ? "update-owned" : "manual-selected",
-    statusText: workflow === "owned" ? "Membuat job update koleksi..." : "Membuat job scrape..."
+    smartUpdate: false,
+    jobKind: "manual-selected",
+    statusText: "Membuat job scrape..."
   });
 }
 
@@ -938,7 +929,7 @@ function notifyAdmin(title, body) {
 }
 
 function basePayload() {
-  const speed = Math.max(1, Math.min(80, Number(els.downloadConcurrency?.value || 6)));
+  const speed = Math.max(1, Math.min(80, Number(els.downloadConcurrency?.value || DEFAULT_DOWNLOAD_CONCURRENCY)));
   return {
     source: DEFAULT_SOURCE,
     comicType: els.comicType.value,
@@ -955,7 +946,7 @@ function basePayload() {
 
 function renderResults(results, options = {}) {
   if (!results.length) {
-    els.grid.innerHTML = `<div class="empty-state">${workflow === "owned" ? "Belum ada koleksi tersimpan untuk di-update." : "Tidak ada judul baru di halaman ini. Coba halaman berikutnya."}</div>`;
+    els.grid.innerHTML = `<div class="empty-state">Tidak ada judul baru di halaman ini. Coba halaman berikutnya.</div>`;
     return;
   }
 
@@ -1024,10 +1015,6 @@ function pagedSourceItems() {
 }
 
 function renderPagination() {
-  if (workflow === "owned") {
-    els.pagination.innerHTML = "";
-    return;
-  }
   if (catalogItems.length && sourceItems === catalogItems) {
     const totalPages = Math.max(1, Math.ceil(sourceItems.length / PAGE_SIZE));
     currentPage = Math.min(Math.max(1, currentPage), totalPages);
@@ -1127,11 +1114,14 @@ function filteredSavedItems() {
 
 function toggleSelectAll() {
   if (!sourceItems.length) return;
-  const selectableItems = sourceItems.filter(item => !item.alreadySaved);
-  const shouldSelect = selectedUrls.size !== selectableItems.length;
-  selectedUrls.clear();
-  if (shouldSelect) selectableItems.forEach(item => selectedUrls.add(item.sourceUrl));
-  renderResults(catalogItems.length && sourceItems === catalogItems ? pagedSourceItems() : sourceItems, { selectable: true });
+  const visibleItems = catalogItems.length && sourceItems === catalogItems ? pagedSourceItems() : sourceItems;
+  const selectableItems = visibleItems.filter(item => !item.alreadySaved && item.sourceUrl);
+  const shouldSelect = selectableItems.some(item => !selectedUrls.has(item.sourceUrl));
+  selectableItems.forEach(item => {
+    if (shouldSelect) selectedUrls.add(item.sourceUrl);
+    else selectedUrls.delete(item.sourceUrl);
+  });
+  renderResults(visibleItems, { selectable: true });
   updateSelectionStatus();
 }
 
@@ -1288,19 +1278,17 @@ async function resetPopularManual() {
 }
 
 function updateSelectionStatus() {
-  if (!sourceItems.length) return;
-  const selectableItems = sourceItems.filter(item => !item.alreadySaved).length;
-  setStatus(`${selectedUrls.size} dari ${selectableItems} judul baru dipilih.`, "");
+  setStatus(`${selectedUrls.size} judul baru dipilih.`, "");
 }
 
 function syncTitle() {
   const isPopular = els.mode.value === "popular";
   const modeText = isPopular ? "POPULAR GLOBAL" : els.mode.value.toUpperCase();
-  els.modeTitle.textContent = workflow === "owned" ? "UPDATE KOLEKSI" : `JUDUL BARU / ${modeText}`;
+  els.modeTitle.textContent = `JUDUL BARU / ${modeText}`;
   els.workflowButtons.forEach(button => button.classList.toggle("active", button.dataset.workflow === workflow));
-  els.load.textContent = workflow === "owned" ? "Muat Koleksi" : "Muat Daftar";
-  els.scrape.textContent = workflow === "owned" ? "Update Semua Koleksi" : "Scrape Terpilih";
-  els.selectAll.hidden = workflow === "owned";
+  els.load.textContent = "Muat Daftar";
+  els.scrape.textContent = "Scrape Terpilih";
+  els.selectAll.hidden = false;
   if (els.popularRange) els.popularRange.disabled = isPopular;
   if (els.popularRangeHint) {
     els.popularRangeHint.textContent = isPopular
