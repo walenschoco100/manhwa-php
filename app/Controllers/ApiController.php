@@ -89,12 +89,14 @@ final class ApiController
     {
         $this->requireAdminJson();
         $file = $_FILES['asset'] ?? null;
+        $kind = strtolower(trim((string) ($_POST['kind'] ?? 'logo')));
+        $isBanner = $kind === 'banner';
         if (!is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-            throw new \RuntimeException('File logo tidak valid.');
+            throw new \RuntimeException('File upload tidak valid.');
         }
 
-        if ((int) ($file['size'] ?? 0) > 4 * 1024 * 1024) {
-            throw new \RuntimeException('Ukuran logo maksimal 4 MB.');
+        if ((int) ($file['size'] ?? 0) > 6 * 1024 * 1024) {
+            throw new \RuntimeException('Ukuran file maksimal 6 MB.');
         }
 
         $tmp = (string) ($file['tmp_name'] ?? '');
@@ -108,7 +110,7 @@ final class ApiController
         ];
         $ext = $map[$mime] ?? strtolower(pathinfo((string) ($file['name'] ?? ''), PATHINFO_EXTENSION));
         if (!in_array($ext, ['png', 'jpg', 'jpeg', 'webp', 'svg'], true)) {
-            throw new \RuntimeException('Format logo harus PNG, JPG, WEBP, atau SVG.');
+            throw new \RuntimeException('Format file harus PNG, JPG, WEBP, atau SVG.');
         }
 
         $targetDir = PUBLIC_PATH . '/assets/brand';
@@ -117,13 +119,14 @@ final class ApiController
         }
 
         $ext = $ext === 'jpeg' ? 'jpg' : $ext;
-        $target = $targetDir . '/custom-logo.' . $ext;
+        $filename = $isBanner ? 'banner-' . date('Ymd-His') . '-' . bin2hex(random_bytes(3)) . '.' . $ext : 'custom-logo.' . $ext;
+        $target = $targetDir . '/' . $filename;
         if (!move_uploaded_file($tmp, $target)) {
-            throw new \RuntimeException('Gagal menyimpan file logo.');
+            throw new \RuntimeException('Gagal menyimpan file upload.');
         }
         @chmod($target, 0644);
 
-        $this->json(['ok' => true, 'url' => '/assets/brand/custom-logo.' . $ext]);
+        $this->json(['ok' => true, 'url' => '/assets/brand/' . $filename]);
     }
 
     public function stats(): void

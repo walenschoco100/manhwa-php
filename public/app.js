@@ -59,6 +59,7 @@ const els = {
   siteFooter: document.querySelector("#siteFooter"),
   searchForm: document.querySelector("#searchForm"),
   searchInput: document.querySelector("#searchInput"),
+  searchSuggestions: document.querySelector("#searchSuggestions"),
   genreFilter: document.querySelector("#genreFilter"),
   statusFilter: document.querySelector("#statusFilter"),
   typeFilter: document.querySelector("#typeFilter"),
@@ -125,16 +126,19 @@ function bindEvents() {
 
   els.searchForm?.addEventListener("submit", event => {
     event.preventDefault();
-    state.query = els.searchInput?.value.trim().toLowerCase() || "";
+    const rawQuery = els.searchInput?.value.trim() || "";
+    state.query = rawQuery.toLowerCase();
     state.catalogPage = 1;
-    navigate("/#update");
-    renderCatalog();
+    hideSearchSuggestions();
+    navigate(rawQuery ? `/search?q=${encodeURIComponent(rawQuery)}` : "/#update");
   });
 
   els.searchInput?.addEventListener("input", event => {
-    state.query = event.target.value.trim().toLowerCase();
-    state.catalogPage = 1;
-    renderCatalog();
+    renderSearchSuggestions(event.target.value);
+  });
+
+  els.searchInput?.addEventListener("focus", event => {
+    renderSearchSuggestions(event.target.value);
   });
 
   els.genreFilter.addEventListener("change", event => {
@@ -286,8 +290,13 @@ function bindEvents() {
       const url = new URL(routeLink.href);
       if (url.origin === window.location.origin) {
         event.preventDefault();
-        navigate(`${url.pathname}${url.hash}`);
+        hideSearchSuggestions();
+        navigate(`${url.pathname}${url.search}${url.hash}`);
       }
+    }
+
+    if (!event.target.closest(".shin-search")) {
+      hideSearchSuggestions();
     }
 
     if (event.target.closest(".reader-images img, .reader-image-wrap")) {
@@ -500,6 +509,11 @@ function renderShared() {
 function route() {
   const parts = window.location.pathname.split("/").filter(Boolean).map(decodeURIComponent);
 
+  if (parts[0] === "search") {
+    renderSearchPage(new URLSearchParams(window.location.search).get("q") || "");
+    return;
+  }
+
   if (parts[0] === "manga" && parts[1]) {
     renderDetailPage(parts[1]);
     return;
@@ -519,6 +533,13 @@ function route() {
   }
 
   showView("home");
+  updateCatalogHeading("Update");
+  if (state.query) {
+    state.query = "";
+    state.catalogPage = 1;
+    if (els.searchInput) els.searchInput.value = "";
+    renderCatalog();
+  }
   updateNav();
   updatePageSeo({
     title: state.settings.siteTitle || "ManhwaLanded - Portal Manhwa",
@@ -532,8 +553,8 @@ function route() {
 
 function navigate(path) {
   const next = new URL(path, window.location.origin);
-  if (`${next.pathname}${next.hash}` !== `${window.location.pathname}${window.location.hash}`) {
-    history.pushState({}, "", `${next.pathname}${next.hash}`);
+  if (`${next.pathname}${next.search}${next.hash}` !== `${window.location.pathname}${window.location.search}${window.location.hash}`) {
+    history.pushState({}, "", `${next.pathname}${next.search}${next.hash}`);
   }
   route();
   if (!next.hash) window.scrollTo({ top: 0, behavior: "smooth" });
@@ -748,6 +769,72 @@ function renderCatalog() {
   renderHomePagination(totalPages);
 }
 
+function renderSearchPage(rawQuery) {
+  const query = String(rawQuery || "").trim();
+  showView("home");
+  state.query = query.toLowerCase();
+  state.catalogPage = 1;
+  state.quickFilter = "all";
+  if (els.searchInput) els.searchInput.value = query;
+  els.quickFilterTabs?.querySelectorAll("[data-quick-filter]").forEach(item => {
+    item.classList.toggle("active", item.dataset.quickFilter === "all");
+  });
+  updateCatalogHeading(query ? `Hasil pencarian: ${query}` : "Hasil Pencarian");
+  renderCatalog();
+  updateNav();
+  updatePageSeo({
+    title: query ? `Hasil pencarian ${query} - ${siteName()}` : `Hasil Pencarian - ${siteName()}`,
+    description: query ? `Daftar komik yang cocok dengan pencarian ${query}.` : `Cari judul manhwa, manga, dan manhua di ${siteName()}.`,
+    image: state.settings.ogImageUrl || state.settings.logoUrl || defaultBrandAssets.logo
+  });
+  requestAnimationFrame(() => document.querySelector("#update")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+}
+
+function updateCatalogHeading(text = "Update") {
+  const heading = document.querySelector("#update .section-head h2");
+  if (heading) heading.textContent = text;
+}
+
+function renderSearchSuggestions(rawQuery) {
+  if (!els.searchSuggestions) return;
+  const query = String(rawQuery || "").trim().toLowerCase();
+  if (query.length < 2) {
+    hideSearchSuggestions();
+    return;
+  }
+  const matches = state.comics
+    .filter(comic => searchHaystack(comic).includes(query))
+    .sort((a, b) => {
+      const aTitle = a.title.toLowerCase().startsWith(query) ? 0 : 1;
+      const bTitle = b.title.toLowerCase().startsWith(query) ? 0 : 1;
+      return aTitle - bTitle || new Date(b.updatedAt) - new Date(a.updatedAt);
+    })
+    .slice(0, 7);
+
+  els.searchSuggestions.hidden = false;
+  els.searchSuggestions.innerHTML = matches.length ? `
+    ${matches.map(comic => {
+      const chapter = comic.chapters?.[0];
+      return `
+        <a class="search-suggestion-item" href="${mangaPath(comic)}" data-route>
+          <span class="search-suggestion-cover">${coverMarkup(comic)}</span>
+          <span>
+            <strong>${escapeHtml(comic.title)}</strong>
+            <small>${escapeHtml(comic.type || "Manhwa")} · ${chapter ? escapeHtml(cleanChapterTitle(chapter.title)) : `${comic.chapters?.length || 0} chapter`}</small>
+          </span>
+        </a>
+      `;
+    }).join("")}
+    <button class="search-suggestion-submit" type="submit">Lihat semua hasil untuk "${escapeHtml(rawQuery.trim())}"</button>
+  ` : `<div class="search-suggestion-empty">Tidak ada judul yang cocok.</div>`;
+}
+
+function hideSearchSuggestions() {
+  if (!els.searchSuggestions) return;
+  els.searchSuggestions.hidden = true;
+  els.searchSuggestions.innerHTML = "";
+}
+
 function catalogPageSize() {
   return state.view === "compact" ? 12 : 18;
 }
@@ -779,7 +866,7 @@ function renderHomePagination(totalPages) {
 function getFilteredComics() {
   return [...state.comics]
     .filter(comic => {
-      const haystack = [comic.title, comic.author, comic.type, comic.status, comic.genres.join(" ")].join(" ").toLowerCase();
+      const haystack = searchHaystack(comic);
       return (
         (!state.query || haystack.includes(state.query)) &&
         (state.genre === "all" || comic.genres.includes(state.genre)) &&
@@ -798,6 +885,10 @@ function getFilteredComics() {
       if (state.sort === "chapters") return b.chapters.length - a.chapters.length;
       return new Date(b.updatedAt) - new Date(a.updatedAt);
     });
+}
+
+function searchHaystack(comic) {
+  return [comic.title, comic.author, comic.type, comic.status, (comic.genres || []).join(" ")].join(" ").toLowerCase();
 }
 
 function renderComicCard(comic, index) {

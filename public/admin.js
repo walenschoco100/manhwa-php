@@ -443,18 +443,23 @@ async function uploadBrandLogoIfNeeded() {
   const file = els.logoUpload?.files?.[0];
   if (!file) return els.logoUrl.value;
 
+  const data = await uploadAdminAsset(file, "logo", "Gagal upload logo.");
+  els.logoUrl.value = data.url;
+  els.logoUpload.value = "";
+  return data.url;
+}
+
+async function uploadAdminAsset(file, kind, errorText) {
   const body = new FormData();
   body.append("asset", file);
-  body.append("kind", "logo");
+  body.append("kind", kind);
   const response = await fetch("/api/upload-brand-asset", {
     method: "POST",
     body
   });
-  const data = await readApiJson(response, "Gagal upload logo.");
-  if (!response.ok || !data.ok) throw new Error(data.error || "Gagal upload logo.");
-  els.logoUrl.value = data.url;
-  els.logoUpload.value = "";
-  return data.url;
+  const data = await readApiJson(response, errorText);
+  if (!response.ok || !data.ok) throw new Error(data.error || errorText);
+  return data;
 }
 
 function fillThemeInputs(palette = {}) {
@@ -1376,10 +1381,31 @@ function renderBannerManager(banners = []) {
   if (!els.bannerManager) return;
   const rows = banners.length ? banners : [{ slot: "home-top", label: "Banner Home Top", imageUrl: "", targetUrl: "", enabled: true }];
   els.bannerManager.innerHTML = rows.map((banner, index) => bannerRow(banner, index)).join("");
-  els.bannerManager.querySelectorAll("[data-remove-banner]").forEach(button => {
-    button.addEventListener("click", () => {
+  bindBannerRows();
+}
+
+function bindBannerRows() {
+  els.bannerManager?.querySelectorAll("[data-remove-banner]").forEach(button => {
+    button.onclick = () => {
       button.closest(".banner-row")?.remove();
-    });
+    };
+  });
+  els.bannerManager?.querySelectorAll("[data-banner-upload]").forEach(input => {
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const row = input.closest(".banner-row");
+      const imageInput = row?.querySelector('[data-banner-field="imageUrl"]');
+      setStatus("Upload banner...", "running");
+      try {
+        const data = await uploadAdminAsset(file, "banner", "Gagal upload banner.");
+        if (imageInput) imageInput.value = data.url;
+        input.value = "";
+        setStatus("Banner terupload. Klik Save Homepage untuk menyimpan.", "");
+      } catch (error) {
+        setStatus(error.message, "error");
+      }
+    };
   });
 }
 
@@ -1401,6 +1427,11 @@ function bannerRow(banner, index) {
         <strong>Gambar banner</strong>
         <input data-banner-field="imageUrl" value="${escapeHtml(banner.imageUrl || "")}" placeholder="/assets/banners/home-top.webp">
       </label>
+      <label>
+        <strong>Upload banner</strong>
+        <input data-banner-upload type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+        <small>Opsional. Upload otomatis mengisi kolom gambar banner.</small>
+      </label>
       <label class="banner-url-field">
         <strong>Link tujuan</strong>
         <input data-banner-field="targetUrl" value="${escapeHtml(banner.targetUrl || "")}" placeholder="https://...">
@@ -1413,6 +1444,7 @@ function bannerRow(banner, index) {
 
 function addBannerRow() {
   els.bannerManager?.insertAdjacentHTML("beforeend", bannerRow({ enabled: true }, els.bannerManager.children.length));
+  bindBannerRows();
 }
 
 function readBannerRows() {
