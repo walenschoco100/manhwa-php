@@ -180,26 +180,29 @@ final class ScraperService
         return array_values($results);
     }
 
-    public function sourceItems(string $sourceUrl, int $limit, int $page, string $cookie = '', array $savedSlugs = []): array
+    public function sourceItems(string $sourceUrl, int $limit, int $page, string $cookie = '', array $savedSlugs = [], string $comicType = 'all'): array
     {
         $listingUrl = $this->listingUrl($sourceUrl, $page);
         $html = $this->fetch($listingUrl, $cookie);
-        $items = array_slice($this->parseListingCards($html, $listingUrl, $savedSlugs), 0, $limit);
+        $cards = $this->parseListingCards($html, $listingUrl, $savedSlugs);
+        $items = $this->filterItemsByType($cards, $comicType);
+        $items = array_slice($items, 0, $limit);
 
-        if ($items) {
+        if ($cards) {
             return $items;
         }
 
-        return array_slice(array_map(function (string $link) use ($savedSlugs): array {
+        $fallbackItems = array_map(function (string $link) use ($savedSlugs, $comicType): array {
             $path = trim((string) parse_url($link, PHP_URL_PATH), '/');
             $slug = basename($path);
             $title = ucwords(str_replace('-', ' ', $slug));
             $alreadySaved = isset($savedSlugs[$slug]);
+            $type = in_array(strtolower($comicType), ['manhwa', 'manga', 'manhua'], true) ? ucfirst(strtolower($comicType)) : 'Manhwa';
 
             return [
                 'title' => $title,
                 'slug' => $slug,
-                'type' => 'Manhwa',
+                'type' => $type,
                 'status' => '',
                 'rating' => 0,
                 'image' => '',
@@ -215,7 +218,9 @@ final class ScraperService
                 'pendingChapterCount' => 0,
                 'incompleteChapterCount' => 0,
             ];
-        }, $this->discoverLinks($listingUrl, $cookie)), 0, $limit);
+        }, $this->discoverLinks($listingUrl, $cookie));
+
+        return array_slice($this->filterItemsByType($fallbackItems, $comicType), 0, $limit);
     }
 
     public function discoverLinks(string $sourceUrl, string $cookie = ''): array
@@ -307,7 +312,28 @@ final class ScraperService
         }
 
         $root = $parts['scheme'] . '://' . $parts['host'];
-        return $root . '/page/' . $page . '/';
+        if (!empty($parts['port'])) {
+            $root .= ':' . $parts['port'];
+        }
+
+        $path = trim((string) ($parts['path'] ?? ''), '/');
+        $path = preg_replace('#/page/\d+/?$#', '', $path) ?: '';
+        $pagePath = ($path ? '/' . $path : '') . '/page/' . $page . '/';
+        $query = !empty($parts['query']) ? '?' . $parts['query'] : '';
+
+        return $root . $pagePath . $query;
+    }
+
+    private function filterItemsByType(array $items, string $comicType): array
+    {
+        $comicType = strtolower(trim($comicType));
+        if (!in_array($comicType, ['manhwa', 'manga', 'manhua'], true)) {
+            return array_values($items);
+        }
+
+        return array_values(array_filter($items, static function (array $item) use ($comicType): bool {
+            return strtolower((string) ($item['type'] ?? '')) === $comicType;
+        }));
     }
 
     private function attr(string $html, string $name): ?string

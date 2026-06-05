@@ -121,18 +121,24 @@ final class ApiController
     {
         $this->requireAdminJson();
         $payload = $this->input();
-        $source = (string) ($payload['source'] ?? 'https://komiktap.info/');
+        $source = $this->sourceListingUrl((string) ($payload['source'] ?? 'https://komiktap.info/'), $payload);
         $limit = max(1, min(50, (int) ($payload['limit'] ?? 25)));
         $page = max(1, (int) ($payload['page'] ?? 1));
         $cookie = (string) ($payload['cookie'] ?? '');
+        $comicType = (string) ($payload['comicType'] ?? 'all');
 
-        $items = (new ScraperService())->sourceItems($source, $limit, $page, $cookie, $this->savedSlugs());
+        $items = (new ScraperService())->sourceItems($source, $limit, $page, $cookie, $this->savedSlugs(), $comicType);
         $this->json([
             'ok' => true,
             'results' => $items,
             'count' => count($items),
             'page' => $page,
             'listingUrl' => $source,
+            'filters' => [
+                'comicType' => $comicType,
+                'mode' => (string) ($payload['mode'] ?? 'update'),
+                'popularRange' => (string) ($payload['popularRange'] ?? 'all'),
+            ],
         ]);
     }
 
@@ -140,14 +146,15 @@ final class ApiController
     {
         $this->requireAdminJson();
         $payload = $this->input();
-        $source = (string) ($payload['source'] ?? 'https://komiktap.info/');
+        $source = $this->sourceListingUrl((string) ($payload['source'] ?? 'https://komiktap.info/'), $payload);
         $maxPages = max(1, min(10, (int) ($payload['maxPages'] ?? 1)));
         $cookie = (string) ($payload['cookie'] ?? '');
+        $comicType = (string) ($payload['comicType'] ?? 'all');
         $items = [];
         $saved = $this->savedSlugs();
 
         for ($page = 1; $page <= $maxPages; $page++) {
-            $items = array_merge($items, (new ScraperService())->sourceItems($source, 25, $page, $cookie, $saved));
+            $items = array_merge($items, (new ScraperService())->sourceItems($source, 25, $page, $cookie, $saved, $comicType));
         }
 
         $newCount = count(array_filter($items, static fn (array $item) => empty($item['alreadySaved'])));
@@ -157,6 +164,12 @@ final class ApiController
             'newCount' => $newCount,
             'updateCount' => count($items) - $newCount,
             'scannedAt' => date(DATE_ATOM),
+            'listingUrl' => $source,
+            'filters' => [
+                'comicType' => $comicType,
+                'mode' => (string) ($payload['mode'] ?? 'update'),
+                'popularRange' => (string) ($payload['popularRange'] ?? 'all'),
+            ],
         ];
         $this->json(['ok' => true, 'catalog' => $catalog]);
     }
@@ -405,6 +418,34 @@ final class ApiController
         $raw = file_get_contents('php://input') ?: '';
         $json = json_decode($raw, true);
         return is_array($json) ? $json : [];
+    }
+
+    private function sourceListingUrl(string $source, array $payload): string
+    {
+        $source = trim($source) ?: 'https://komiktap.info/';
+        $parts = parse_url($source);
+        if (!$parts || empty($parts['scheme']) || empty($parts['host'])) {
+            return 'https://komiktap.info/manga/';
+        }
+
+        $root = $parts['scheme'] . '://' . $parts['host'];
+        if (!empty($parts['port'])) {
+            $root .= ':' . $parts['port'];
+        }
+
+        $mode = strtolower((string) ($payload['mode'] ?? 'update'));
+        $comicType = strtolower((string) ($payload['comicType'] ?? 'all'));
+
+        $params = [];
+        if (in_array($mode, ['update', 'popular', 'latest'], true)) {
+            $params['order'] = $mode;
+        }
+        if (in_array($comicType, ['manhwa', 'manga', 'manhua'], true)) {
+            $params['type'] = $comicType;
+        }
+
+        $query = http_build_query($params);
+        return $root . '/manga/' . ($query ? '?' . $query : '');
     }
 
     private function requireAdminJson(): void

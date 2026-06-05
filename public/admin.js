@@ -56,6 +56,7 @@ const els = {
   comicType: document.querySelector("#comicTypeInput"),
   mode: document.querySelector("#modeInput"),
   popularRange: document.querySelector("#popularRangeInput"),
+  popularRangeHint: document.querySelector("#popularRangeHint"),
   scanMaxPage: document.querySelector("#scanMaxPageInput"),
   downloadConcurrency: document.querySelector("#downloadConcurrencyInput"),
   cookie: document.querySelector("#cookieInput"),
@@ -514,8 +515,8 @@ async function loadSourceList() {
     selectedUrls.clear();
     renderResults(sourceItems, { selectable: true });
     renderPagination(cached.page);
-    els.sourceHint.textContent = `${cached.count} ${typeLabel()} dari cache.`;
-    setStatus(`${cached.count} ${typeLabel()} ditemukan. Centang judul yang ingin diambil.`, "");
+    els.sourceHint.textContent = `${cached.count} ${typeLabel()} dari cache · ${filterLabel(cached.filters)} · ${cached.listingUrl || ""}`;
+    setStatus(`${cached.count} ${typeLabel()} ditemukan dari ${filterLabel(cached.filters)}. Centang judul yang ingin diambil.`, "");
     return;
   }
 
@@ -540,8 +541,8 @@ async function loadSourceList() {
     sourceCache.set(cacheKey, data);
     renderResults(sourceItems, { selectable: true });
     renderPagination();
-    els.sourceHint.textContent = `${data.count} ${typeLabel()} dari ${data.listingUrl}`;
-    setStatus(`${data.count} ${typeLabel()} ditemukan. Centang judul yang ingin diambil.`, "");
+    els.sourceHint.textContent = `${data.count} ${typeLabel()} dari ${filterLabel(data.filters)} · ${data.listingUrl}`;
+    setStatus(`${data.count} ${typeLabel()} ditemukan dari ${filterLabel(data.filters)}. Centang judul yang ingin diambil.`, "");
   } catch (error) {
     setStatus(error.message, "error");
   } finally {
@@ -578,7 +579,7 @@ async function scanSourceCatalog() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         ...basePayload(),
-        comicType: els.comicType.value === "all" ? "manhwa" : els.comicType.value,
+        comicType: els.comicType.value,
         maxPages: Number(els.scanMaxPage?.value || 30)
       })
     });
@@ -692,7 +693,8 @@ async function readApiJson(response, fallbackMessage = "Respons API tidak valid.
 function renderCatalogHint(catalog = {}) {
   if (!els.sourceHint) return;
   const scanned = catalog.scannedAt ? new Date(catalog.scannedAt).toLocaleString("id-ID") : "-";
-  els.sourceHint.textContent = `${catalog.total || 0} katalog · ${catalog.newCount || 0} baru · ${catalog.updateCount || 0} update · scan ${scanned}`;
+  const source = catalog.listingUrl ? ` · ${catalog.listingUrl}` : "";
+  els.sourceHint.textContent = `${catalog.total || 0} katalog · ${catalog.newCount || 0} baru · ${catalog.updateCount || 0} update · ${filterLabel(catalog.filters)} · scan ${scanned}${source}`;
 }
 
 async function scrapeSelected() {
@@ -1292,14 +1294,19 @@ function updateSelectionStatus() {
 }
 
 function syncTitle() {
-  const modeText = els.mode.value === "popular"
-    ? `${els.mode.value.toUpperCase()} / ${els.popularRange.value.toUpperCase()}`
-    : els.mode.value.toUpperCase();
+  const isPopular = els.mode.value === "popular";
+  const modeText = isPopular ? "POPULAR GLOBAL" : els.mode.value.toUpperCase();
   els.modeTitle.textContent = workflow === "owned" ? "UPDATE KOLEKSI" : `JUDUL BARU / ${modeText}`;
   els.workflowButtons.forEach(button => button.classList.toggle("active", button.dataset.workflow === workflow));
   els.load.textContent = workflow === "owned" ? "Muat Koleksi" : "Muat Daftar";
   els.scrape.textContent = workflow === "owned" ? "Update Semua Koleksi" : "Scrape Terpilih";
   els.selectAll.hidden = workflow === "owned";
+  if (els.popularRange) els.popularRange.disabled = isPopular;
+  if (els.popularRangeHint) {
+    els.popularRangeHint.textContent = isPopular
+      ? "Komiktap archive hanya menyediakan popular global."
+      : "Dipakai hanya jika source mendukung rentang popular.";
+  }
 }
 
 function renderBannerManager(banners = []) {
@@ -1372,6 +1379,12 @@ function stars(rating) {
 function typeLabel() {
   const labels = { all: "judul", manhwa: "manhwa", manga: "manga", manhua: "manhua" };
   return labels[els.comicType.value] || "judul";
+}
+
+function filterLabel(filters = basePayload()) {
+  const type = { all: "Semua", manhwa: "Manhwa", manga: "Manga", manhua: "Manhua" }[filters.comicType] || "Semua";
+  const mode = { update: "Update", popular: "Popular", latest: "Latest" }[filters.mode] || "Update";
+  return mode === "Popular" ? `${type} / Popular Global` : `${type} / ${mode}`;
 }
 
 function typeBadge(type) {
