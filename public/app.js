@@ -13,6 +13,18 @@ const defaultBrandAssets = {
   favicon: "/assets/brand/default-favicon.svg"
 };
 
+const themePaletteVars = {
+  bg: "--bg",
+  surface: "--surface",
+  panel: "--panel",
+  text: "--text",
+  muted: "--muted",
+  line: "--line",
+  accent: "--accent",
+  accent2: "--accent-2",
+  gold: "--gold"
+};
+
 const state = {
   query: "",
   genre: "all",
@@ -354,8 +366,10 @@ function applySettings() {
   const logoText = settings.headerLogoText || siteTitle.split("-")[0].trim() || "MANHWALANDED";
   const logoUrl = settings.logoUrl || defaultBrandAssets.logo;
   const faviconUrl = settings.faviconUrl || defaultBrandAssets.favicon;
+  const brandLogoMode = settings.brandLogoMode || "image-text";
 
   document.title = siteTitle;
+  applyThemePalette(settings.themePalette || {});
   setMeta("description", settings.metaDescription || "");
   setMeta("keywords", settings.metaKeywords || "");
   setMeta("og:title", siteTitle, "property");
@@ -366,10 +380,12 @@ function applySettings() {
 
   document.querySelectorAll(".shin-brand").forEach(brand => {
     const logo = brand.querySelector(".shin-logo");
-    const text = brand.querySelector("span:last-child");
+    const text = brand.querySelector(".shin-brand-text");
+    brand.classList.toggle("brand-image-only", brandLogoMode === "image-only");
+    brand.classList.toggle("brand-text-only", brandLogoMode === "text-only");
     if (text) text.textContent = logoText;
     if (!logo) return;
-    if (logoUrl) {
+    if (logoUrl && brandLogoMode !== "text-only") {
       logo.classList.add("has-logo-image");
       logo.innerHTML = `<img src="${escapeHtml(logoUrl)}" alt="">`;
     } else {
@@ -381,6 +397,15 @@ function applySettings() {
   if (els.footerText) {
     els.footerText.innerHTML = settings.footerText || `Copyright ©2026 ${escapeHtml(logoText)}. All rights reserved.`;
   }
+}
+
+function applyThemePalette(palette = {}) {
+  Object.entries(themePaletteVars).forEach(([key, variable]) => {
+    const value = String(palette[key] || "").trim();
+    if (/^#[0-9a-f]{6}$/i.test(value)) {
+      document.documentElement.style.setProperty(variable, value);
+    }
+  });
 }
 
 function setMeta(name, content, attrName = "name") {

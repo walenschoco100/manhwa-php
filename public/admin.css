@@ -405,6 +405,17 @@ button {
   min-height: 42px;
 }
 
+.settings-form input[type="color"] {
+  min-height: 46px;
+  padding: 6px;
+  cursor: pointer;
+}
+
+.palette-grid {
+  grid-column: 1 / -1;
+  align-items: end;
+}
+
 .settings-form textarea {
   min-height: 96px;
   padding: 12px;

@@ -33,8 +33,19 @@ const els = {
   footerText: document.querySelector("#footerTextInput"),
   headerLogoText: document.querySelector("#headerLogoTextInput"),
   logoUrl: document.querySelector("#logoUrlInput"),
+  logoUpload: document.querySelector("#logoUploadInput"),
+  brandLogoMode: document.querySelector("#brandLogoModeInput"),
   faviconUrl: document.querySelector("#faviconUrlInput"),
   ogImageUrl: document.querySelector("#ogImageUrlInput"),
+  themeBg: document.querySelector("#themeBgInput"),
+  themeSurface: document.querySelector("#themeSurfaceInput"),
+  themePanel: document.querySelector("#themePanelInput"),
+  themeText: document.querySelector("#themeTextInput"),
+  themeMuted: document.querySelector("#themeMutedInput"),
+  themeLine: document.querySelector("#themeLineInput"),
+  themeAccent: document.querySelector("#themeAccentInput"),
+  themeAccent2: document.querySelector("#themeAccent2Input"),
+  themeGold: document.querySelector("#themeGoldInput"),
   homepageForm: document.querySelector("#homepageForm"),
   heroMode: document.querySelector("#heroModeInput"),
   heroSlugs: document.querySelector("#heroSlugsInput"),
@@ -139,6 +150,30 @@ const selectedUrls = new Set();
 const selectedSlugs = new Set();
 
 if (els.downloadConcurrency) els.downloadConcurrency.value = String(DEFAULT_DOWNLOAD_CONCURRENCY);
+
+const defaultThemePalette = {
+  bg: "#090a0c",
+  surface: "#101216",
+  panel: "#171a20",
+  text: "#f8f3ed",
+  muted: "#a9a4a0",
+  line: "#2a3038",
+  accent: "#8b5cf6",
+  accent2: "#a855f7",
+  gold: "#f7c948"
+};
+
+const themeInputMap = {
+  bg: "themeBg",
+  surface: "themeSurface",
+  panel: "themePanel",
+  text: "themeText",
+  muted: "themeMuted",
+  line: "themeLine",
+  accent: "themeAccent",
+  accent2: "themeAccent2",
+  gold: "themeGold"
+};
 
 init();
 
@@ -347,8 +382,10 @@ async function loadSettings() {
   els.footerText.value = settings.footerText || "";
   els.headerLogoText.value = settings.headerLogoText || "";
   els.logoUrl.value = settings.logoUrl || "";
+  if (els.brandLogoMode) els.brandLogoMode.value = settings.brandLogoMode || "image-text";
   els.faviconUrl.value = settings.faviconUrl || "";
   if (els.ogImageUrl) els.ogImageUrl.value = settings.ogImageUrl || "";
+  fillThemeInputs(settings.themePalette || {});
   if (els.heroMode) els.heroMode.value = settings.heroMode || "auto";
   if (els.heroSlugs) els.heroSlugs.value = (settings.heroSlugs || []).join(", ");
   renderHeroPicker();
@@ -371,29 +408,67 @@ async function logoutAdmin() {
 async function saveSettings(event) {
   event.preventDefault();
   setStatus("Menyimpan settings...", "running");
+  try {
+    const logoUrl = await uploadBrandLogoIfNeeded();
+    const response = await fetch("/api/settings", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        siteTitle: els.siteTitle.value,
+        metaDescription: els.metaDescription.value,
+        metaKeywords: els.metaKeywords.value,
+        footerText: els.footerText.value,
+        headerLogoText: els.headerLogoText.value,
+        logoUrl,
+        brandLogoMode: els.brandLogoMode?.value || "image-text",
+        faviconUrl: els.faviconUrl.value,
+        ogImageUrl: els.ogImageUrl?.value || settingsCache.ogImageUrl || "",
+        themePalette: readThemeInputs()
+      })
+    });
+    const data = await readApiJson(response, "Gagal membaca respons settings.");
+    if (!response.ok || !data.ok) {
+      setStatus(data.error || "Gagal menyimpan settings.", "error");
+      return;
+    }
 
-  const response = await fetch("/api/settings", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      siteTitle: els.siteTitle.value,
-      metaDescription: els.metaDescription.value,
-      metaKeywords: els.metaKeywords.value,
-      footerText: els.footerText.value,
-      headerLogoText: els.headerLogoText.value,
-      logoUrl: els.logoUrl.value,
-      faviconUrl: els.faviconUrl.value,
-      ogImageUrl: els.ogImageUrl?.value || settingsCache.ogImageUrl || ""
-    })
-  });
-  const data = await readApiJson(response, "Gagal membaca respons settings.");
-  if (!response.ok || !data.ok) {
-    setStatus(data.error || "Gagal menyimpan settings.", "error");
-    return;
+    setStatus("Settings tersimpan. Refresh website untuk melihat perubahan penuh.", "");
+    settingsCache = data.settings || settingsCache;
+  } catch (error) {
+    setStatus(error.message, "error");
   }
+}
 
-  setStatus("Settings tersimpan. Refresh website untuk melihat perubahan penuh.", "");
-  settingsCache = data.settings || settingsCache;
+async function uploadBrandLogoIfNeeded() {
+  const file = els.logoUpload?.files?.[0];
+  if (!file) return els.logoUrl.value;
+
+  const body = new FormData();
+  body.append("asset", file);
+  body.append("kind", "logo");
+  const response = await fetch("/api/upload-brand-asset", {
+    method: "POST",
+    body
+  });
+  const data = await readApiJson(response, "Gagal upload logo.");
+  if (!response.ok || !data.ok) throw new Error(data.error || "Gagal upload logo.");
+  els.logoUrl.value = data.url;
+  els.logoUpload.value = "";
+  return data.url;
+}
+
+function fillThemeInputs(palette = {}) {
+  const merged = { ...defaultThemePalette, ...palette };
+  Object.entries(themeInputMap).forEach(([key, elementKey]) => {
+    if (els[elementKey]) els[elementKey].value = merged[key] || defaultThemePalette[key];
+  });
+}
+
+function readThemeInputs() {
+  return Object.fromEntries(Object.entries(themeInputMap).map(([key, elementKey]) => [
+    key,
+    els[elementKey]?.value || defaultThemePalette[key]
+  ]));
 }
 
 async function saveHomepageSettings(event) {

@@ -81,6 +81,22 @@
             </label>
 
             <label>
+              <strong>Upload Logo Image</strong>
+              <input id="logoUploadInput" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+              <small>Opsional. Upload akan otomatis mengisi Logo Image URL.</small>
+            </label>
+
+            <label>
+              <strong>Mode Logo Navbar/Footer</strong>
+              <select id="brandLogoModeInput">
+                <option value="image-text">Logo image + teks</option>
+                <option value="image-only">Logo image saja</option>
+                <option value="text-only">Teks saja</option>
+              </select>
+              <small>Pilih image saja jika file logo sudah berisi tulisan seperti DoujinManhwa.</small>
+            </label>
+
+            <label>
               <strong>Favicon URL</strong>
               <input id="faviconUrlInput" type="url" placeholder="Kosongkan untuk memakai favicon default">
               <small>Kosongkan untuk favicon default. Disarankan SVG/PNG square minimal 96x96.</small>
@@ -97,6 +113,45 @@
               <textarea id="footerTextInput" rows="4" placeholder="Copyright text"></textarea>
               <small>Text support HTML tags sederhana.</small>
             </label>
+
+            <div class="settings-grid palette-grid" aria-label="Palet warna website">
+              <label>
+                <strong>Background</strong>
+                <input id="themeBgInput" type="color">
+              </label>
+              <label>
+                <strong>Surface</strong>
+                <input id="themeSurfaceInput" type="color">
+              </label>
+              <label>
+                <strong>Panel</strong>
+                <input id="themePanelInput" type="color">
+              </label>
+              <label>
+                <strong>Text</strong>
+                <input id="themeTextInput" type="color">
+              </label>
+              <label>
+                <strong>Muted Text</strong>
+                <input id="themeMutedInput" type="color">
+              </label>
+              <label>
+                <strong>Line</strong>
+                <input id="themeLineInput" type="color">
+              </label>
+              <label>
+                <strong>Accent</strong>
+                <input id="themeAccentInput" type="color">
+              </label>
+              <label>
+                <strong>Accent 2</strong>
+                <input id="themeAccent2Input" type="color">
+              </label>
+              <label>
+                <strong>Gold</strong>
+                <input id="themeGoldInput" type="color">
+              </label>
+            </div>
 
             <button class="primary admin-save" type="submit">Save Settings</button>
           </form>

@@ -1021,7 +1021,7 @@ img {
 
 .reader-icon-link:hover,
 .reader-circle:hover {
-  background: #6d28d9;
+  background: var(--accent);
 }
 
 .reader-icon-link.disabled,
@@ -1263,8 +1263,8 @@ body.admin-page {
 
 .quick-filter-tabs button.active,
 .chapter-range-tabs button.active {
-  border-color: #7c3aed;
-  background: #6d28d9;
+  border-color: var(--accent);
+  background: var(--accent);
   color: #fff;
 }
 
@@ -1342,7 +1342,7 @@ body.admin-page {
 }
 
 .updated-badge {
-  background: #7c3aed;
+  background: var(--accent);
 }
 
 .chapter-panel {
@@ -1365,7 +1365,7 @@ body.admin-page {
   content: " sudah dibaca";
   display: inline-block;
   margin-left: 8px;
-  color: #8b5cf6;
+  color: var(--accent);
   font-size: .72rem;
 }
 
@@ -1466,7 +1466,7 @@ body.admin-page {
   transform: translateX(-50%);
   min-height: 34px;
   border-radius: 8px;
-  background: #7c3aed;
+  background: var(--accent);
   color: #fff;
   padding: 0 13px;
   font-weight: 900;
@@ -1536,6 +1536,23 @@ body.admin-page {
 }
 
 @media (max-width: 760px) {
+  .shin-inner {
+    align-items: stretch;
+    flex-direction: column;
+    height: auto;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .shin-search {
+    width: 100%;
+    grid-template-columns: 1fr auto;
+  }
+
+  .shin-brand.brand-image-only .shin-logo.has-logo-image {
+    width: min(72vw, 260px);
+  }
+
   .app-shell {
     padding-inline: 12px;
   }
@@ -1668,7 +1685,8 @@ body.admin-page {
   min-height: 58px;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
+  gap: 18px;
   margin: 0 auto;
 }
 
@@ -1684,6 +1702,8 @@ body.admin-page {
 
 .shin-brand {
   font-size: 1rem;
+  flex: 0 0 auto;
+  min-width: 0;
 }
 
 .shin-logo {
@@ -1700,6 +1720,9 @@ body.admin-page {
 .shin-logo.has-logo-image {
   overflow: hidden;
   background: transparent;
+  border-radius: 0;
+  width: 40px;
+  height: 40px;
 }
 
 .shin-logo.has-logo-image img {
@@ -1707,6 +1730,21 @@ body.admin-page {
   height: 100%;
   object-fit: contain;
   display: block;
+}
+
+.shin-brand.brand-image-only .shin-logo.has-logo-image {
+  width: clamp(160px, 19vw, 280px);
+  height: 52px;
+}
+
+.footer-brand.brand-image-only .shin-logo.has-logo-image {
+  width: clamp(150px, 18vw, 260px);
+  height: 50px;
+}
+
+.shin-brand.brand-image-only .shin-brand-text,
+.shin-brand.brand-text-only .shin-logo {
+  display: none;
 }
 
 .shin-nav {
@@ -1723,16 +1761,17 @@ body.admin-page {
 
 .shin-nav a.active,
 .shin-nav a:hover {
-  color: #7c3aed;
+  color: var(--accent);
 }
 
 .shin-search {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(130px, 240px) auto;
   gap: 6px;
   padding: 4px;
   border-radius: 8px;
-  background: #24262c;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
 }
 
 .shin-search input {
@@ -1749,7 +1788,7 @@ body.admin-page {
 .shin-user {
   min-height: 30px;
   border-radius: 7px;
-  background: #32343b;
+  background: var(--soft);
   color: #d9dbe2;
   padding: 0 9px;
   font-size: .72rem;
@@ -2060,7 +2099,7 @@ body.is-reader .shin-header {
   max-width: 100%;
   padding: 0 20px;
   border-radius: 5px;
-  background: linear-gradient(135deg, #7c3aed, #ef4444);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
   color: #fff;
   line-height: 1;
   white-space: nowrap;
@@ -2083,12 +2122,12 @@ body.is-reader .shin-header {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  border: 3px solid #8b5cf6;
+  border: 3px solid var(--accent);
   background: transparent;
 }
 
 .home-featured-dots .hero-dot.active {
-  background: #8b5cf6;
+  background: var(--accent);
   box-shadow: inset 0 0 0 3px #111216;
 }
 
@@ -2366,7 +2405,7 @@ body.is-reader .shin-header {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #6d28d9;
+  background: var(--accent);
 }
 
 .shinigami-layout .section-block {
@@ -2487,12 +2526,12 @@ body.is-reader .shin-header {
 .rank-badge {
   left: 5px;
   top: 5px;
-  background: #7c3aed;
+  background: var(--accent);
   color: #fff;
 }
 
 .rank-badge.mini {
-  background: #6d28d9;
+  background: var(--accent);
 }
 
 .country-dot {
@@ -3271,8 +3310,8 @@ body.is-reader .shin-header {
 
 .chapter-pagination button.active,
 .chapter-pagination button:hover {
-  background: #7c3aed;
-  border-color: #7c3aed;
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
 .chapter-pagination button:disabled {

@@ -31,6 +31,7 @@ final class ApiController
                 $path === '/api/admin-session' => $this->json(['ok' => true, 'authenticated' => admin_is_logged_in()]),
                 $path === '/api/settings' && $method === 'GET' => $this->settings(),
                 $path === '/api/settings' && $method === 'POST' => $this->saveSettings(),
+                $path === '/api/upload-brand-asset' && $method === 'POST' => $this->uploadBrandAsset(),
                 $path === '/api/stats' => $this->stats(),
                 $path === '/api/comics' => $this->comics(),
                 $path === '/api/source-list' && $method === 'POST' => $this->sourceList(),
@@ -82,6 +83,47 @@ final class ApiController
         $settings = array_merge($this->legacySettings(), $payload);
         $this->saveSettingsArray($settings);
         $this->json(['ok' => true, 'settings' => $this->legacySettings()]);
+    }
+
+    public function uploadBrandAsset(): void
+    {
+        $this->requireAdminJson();
+        $file = $_FILES['asset'] ?? null;
+        if (!is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            throw new \RuntimeException('File logo tidak valid.');
+        }
+
+        if ((int) ($file['size'] ?? 0) > 4 * 1024 * 1024) {
+            throw new \RuntimeException('Ukuran logo maksimal 4 MB.');
+        }
+
+        $tmp = (string) ($file['tmp_name'] ?? '');
+        $mime = is_file($tmp) ? (string) (mime_content_type($tmp) ?: '') : '';
+        $map = [
+            'image/png' => 'png',
+            'image/jpeg' => 'jpg',
+            'image/webp' => 'webp',
+            'image/svg+xml' => 'svg',
+            'text/plain' => 'svg',
+        ];
+        $ext = $map[$mime] ?? strtolower(pathinfo((string) ($file['name'] ?? ''), PATHINFO_EXTENSION));
+        if (!in_array($ext, ['png', 'jpg', 'jpeg', 'webp', 'svg'], true)) {
+            throw new \RuntimeException('Format logo harus PNG, JPG, WEBP, atau SVG.');
+        }
+
+        $targetDir = PUBLIC_PATH . '/assets/brand';
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0755, true);
+        }
+
+        $ext = $ext === 'jpeg' ? 'jpg' : $ext;
+        $target = $targetDir . '/custom-logo.' . $ext;
+        if (!move_uploaded_file($tmp, $target)) {
+            throw new \RuntimeException('Gagal menyimpan file logo.');
+        }
+        @chmod($target, 0644);
+
+        $this->json(['ok' => true, 'url' => '/assets/brand/custom-logo.' . $ext]);
     }
 
     public function stats(): void
@@ -476,8 +518,20 @@ final class ApiController
             'footerText' => 'Copyright ©2026 MANHWALANDED. All rights reserved.',
             'headerLogoText' => 'MANHWALANDED',
             'logoUrl' => '/assets/brand/default-logo.svg',
+            'brandLogoMode' => 'image-text',
             'faviconUrl' => '/assets/brand/default-favicon.svg',
             'ogImageUrl' => '',
+            'themePalette' => [
+                'bg' => '#090a0c',
+                'surface' => '#101216',
+                'panel' => '#171a20',
+                'text' => '#f8f3ed',
+                'muted' => '#a9a4a0',
+                'line' => '#2a3038',
+                'accent' => '#8b5cf6',
+                'accent2' => '#a855f7',
+                'gold' => '#f7c948',
+            ],
             'heroMode' => 'auto',
             'heroSlugs' => [],
             'recommendMode' => 'auto',
@@ -508,6 +562,9 @@ final class ApiController
     private function saveSettingsArray(array $settings): void
     {
         $settings['logoUrl'] = trim((string) ($settings['logoUrl'] ?? '')) ?: '/assets/brand/default-logo.svg';
+        $settings['brandLogoMode'] = in_array(($settings['brandLogoMode'] ?? ''), ['image-text', 'image-only', 'text-only'], true)
+            ? $settings['brandLogoMode']
+            : 'image-text';
         $settings['faviconUrl'] = trim((string) ($settings['faviconUrl'] ?? '')) ?: '/assets/brand/default-favicon.svg';
         $settings['ogImageUrl'] = trim((string) ($settings['ogImageUrl'] ?? '')) ?: $settings['logoUrl'];
         $this->setSetting('_legacy_settings', json_encode($settings, JSON_UNESCAPED_SLASHES));
