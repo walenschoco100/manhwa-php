@@ -4156,7 +4156,7 @@ body.brand-logo-image-only .shin-header .shin-inner {
 }
 
 body.brand-logo-image-only .shin-header .shin-brand.brand-image-only {
-  width: clamp(150px, 22vw, 260px) !important;
+  width: clamp(180px, 26vw, 340px) !important;
   height: 58px !important;
   overflow: hidden !important;
 }
@@ -4166,20 +4166,23 @@ body.brand-logo-image-only .shin-header .shin-brand.brand-image-only .shin-logo.
   height: 58px !important;
   max-width: 100% !important;
   max-height: 58px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   overflow: hidden !important;
 }
 
 body.brand-logo-image-only .shin-header .shin-brand.brand-image-only .shin-logo.has-logo-image img {
-  width: 100% !important;
-  height: 100% !important;
+  width: auto !important;
+  height: auto !important;
   max-width: 100% !important;
   max-height: 100% !important;
-  object-fit: contain !important;
+  object-fit: scale-down !important;
   object-position: center !important;
 }
 
 body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only {
-  width: clamp(150px, 22vw, 260px) !important;
+  width: clamp(180px, 26vw, 340px) !important;
   height: 58px !important;
   overflow: hidden !important;
 }
@@ -4189,15 +4192,18 @@ body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only .shin-log
   height: 58px !important;
   max-width: 100% !important;
   max-height: 58px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   overflow: hidden !important;
 }
 
 body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only .shin-logo.has-logo-image img {
-  width: 100% !important;
-  height: 100% !important;
+  width: auto !important;
+  height: auto !important;
   max-width: 100% !important;
   max-height: 100% !important;
-  object-fit: contain !important;
+  object-fit: scale-down !important;
   object-position: center !important;
 }
 
@@ -4213,7 +4219,7 @@ body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only .shin-log
   }
 
   body.brand-logo-image-only .shin-header .shin-brand.brand-image-only {
-    width: min(82vw, 260px) !important;
+    width: min(82vw, 340px) !important;
     height: 58px !important;
   }
 
@@ -4227,7 +4233,7 @@ body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only .shin-log
   }
 
   body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only {
-    width: min(82vw, 260px) !important;
+    width: min(82vw, 340px) !important;
     height: 58px !important;
   }
 
