@@ -4142,30 +4142,31 @@ body {
 }
 
 body.brand-logo-image-only .shin-header {
-  min-height: 148px;
+  min-height: 76px;
+  overflow: hidden;
 }
 
 body.brand-logo-image-only .shin-header .shin-inner {
-  min-height: 148px;
+  min-height: 76px;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 14px 22px;
-  padding-top: 12px;
-  padding-bottom: 12px;
+  flex-wrap: nowrap;
+  gap: 18px;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 body.brand-logo-image-only .shin-header .shin-brand.brand-image-only {
-  width: min(46vw, 520px) !important;
-  height: 112px !important;
-  overflow: visible !important;
+  width: clamp(150px, 22vw, 260px) !important;
+  height: 58px !important;
+  overflow: hidden !important;
 }
 
 body.brand-logo-image-only .shin-header .shin-brand.brand-image-only .shin-logo.has-logo-image {
   width: 100% !important;
-  height: 112px !important;
+  height: 58px !important;
   max-width: 100% !important;
-  max-height: 112px !important;
-  overflow: visible !important;
+  max-height: 58px !important;
+  overflow: hidden !important;
 }
 
 body.brand-logo-image-only .shin-header .shin-brand.brand-image-only .shin-logo.has-logo-image img {
@@ -4178,17 +4179,17 @@ body.brand-logo-image-only .shin-header .shin-brand.brand-image-only .shin-logo.
 }
 
 body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only {
-  width: min(50vw, 560px) !important;
-  height: 118px !important;
-  overflow: visible !important;
+  width: clamp(150px, 22vw, 260px) !important;
+  height: 58px !important;
+  overflow: hidden !important;
 }
 
 body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only .shin-logo.has-logo-image {
   width: 100% !important;
-  height: 118px !important;
+  height: 58px !important;
   max-width: 100% !important;
-  max-height: 118px !important;
-  overflow: visible !important;
+  max-height: 58px !important;
+  overflow: hidden !important;
 }
 
 body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only .shin-logo.has-logo-image img {
@@ -4202,21 +4203,23 @@ body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only .shin-log
 
 @media (max-width: 760px) {
   body.brand-logo-image-only .shin-header {
-    min-height: 170px;
+    min-height: 124px;
+    overflow: hidden;
   }
 
   body.brand-logo-image-only .shin-header .shin-inner {
-    min-height: 170px;
+    min-height: 124px;
+    flex-wrap: wrap;
   }
 
   body.brand-logo-image-only .shin-header .shin-brand.brand-image-only {
-    width: min(92vw, 460px) !important;
-    height: 100px !important;
+    width: min(82vw, 260px) !important;
+    height: 58px !important;
   }
 
   body.brand-logo-image-only .shin-header .shin-brand.brand-image-only .shin-logo.has-logo-image {
-    height: 100px !important;
-    max-height: 100px !important;
+    height: 58px !important;
+    max-height: 58px !important;
   }
 
   body.brand-logo-image-only .shin-header .shin-search {
@@ -4224,12 +4227,12 @@ body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only .shin-log
   }
 
   body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only {
-    width: min(92vw, 460px) !important;
-    height: 104px !important;
+    width: min(82vw, 260px) !important;
+    height: 58px !important;
   }
 
   body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only .shin-logo.has-logo-image {
-    height: 104px !important;
-    max-height: 104px !important;
+    height: 58px !important;
+    max-height: 58px !important;
   }
 }
