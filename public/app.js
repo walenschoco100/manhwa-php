@@ -378,6 +378,8 @@ function applySettings() {
   const brandLogoMode = settings.brandLogoMode || "image-text";
 
   document.title = siteTitle;
+  document.body.classList.toggle("brand-logo-image-only", brandLogoMode === "image-only");
+  document.body.classList.toggle("brand-logo-text-only", brandLogoMode === "text-only");
   applyThemePalette(settings.themePalette || {});
   setMeta("description", settings.metaDescription || "");
   setMeta("keywords", settings.metaKeywords || "");

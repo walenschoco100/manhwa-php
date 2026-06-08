@@ -4140,3 +4140,96 @@ body {
     max-width: 100%;
   }
 }
+
+body.brand-logo-image-only .shin-header {
+  min-height: 148px;
+}
+
+body.brand-logo-image-only .shin-header .shin-inner {
+  min-height: 148px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px 22px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+body.brand-logo-image-only .shin-header .shin-brand.brand-image-only {
+  width: min(46vw, 520px) !important;
+  height: 112px !important;
+  overflow: visible !important;
+}
+
+body.brand-logo-image-only .shin-header .shin-brand.brand-image-only .shin-logo.has-logo-image {
+  width: 100% !important;
+  height: 112px !important;
+  max-width: 100% !important;
+  max-height: 112px !important;
+  overflow: visible !important;
+}
+
+body.brand-logo-image-only .shin-header .shin-brand.brand-image-only .shin-logo.has-logo-image img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+}
+
+body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only {
+  width: min(50vw, 560px) !important;
+  height: 118px !important;
+  overflow: visible !important;
+}
+
+body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only .shin-logo.has-logo-image {
+  width: 100% !important;
+  height: 118px !important;
+  max-width: 100% !important;
+  max-height: 118px !important;
+  overflow: visible !important;
+}
+
+body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only .shin-logo.has-logo-image img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+}
+
+@media (max-width: 760px) {
+  body.brand-logo-image-only .shin-header {
+    min-height: 170px;
+  }
+
+  body.brand-logo-image-only .shin-header .shin-inner {
+    min-height: 170px;
+  }
+
+  body.brand-logo-image-only .shin-header .shin-brand.brand-image-only {
+    width: min(92vw, 460px) !important;
+    height: 100px !important;
+  }
+
+  body.brand-logo-image-only .shin-header .shin-brand.brand-image-only .shin-logo.has-logo-image {
+    height: 100px !important;
+    max-height: 100px !important;
+  }
+
+  body.brand-logo-image-only .shin-header .shin-search {
+    flex: 1 1 100%;
+  }
+
+  body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only {
+    width: min(92vw, 460px) !important;
+    height: 104px !important;
+  }
+
+  body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only .shin-logo.has-logo-image {
+    height: 104px !important;
+    max-height: 104px !important;
+  }
+}
