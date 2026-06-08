@@ -4444,11 +4444,25 @@ body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only .shin-log
   }
 
   .mobile-search-toggle {
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
     grid-column: 2;
     grid-row: 1;
     justify-self: end;
+    background: rgba(255, 255, 255, .06);
+  }
+
+  .mobile-search-toggle span {
+    width: 14px;
+    height: 14px;
+    border-width: 2px;
+  }
+
+  .mobile-search-toggle span::after {
+    width: 7px;
+    height: 2px;
+    right: -6px;
+    bottom: -3px;
   }
 
   .shin-header .shin-search {
