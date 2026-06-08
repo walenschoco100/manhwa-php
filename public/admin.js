@@ -200,6 +200,7 @@ function bindEvents() {
   els.logout?.addEventListener("click", logoutAdmin);
 
   els.settingsForm.addEventListener("submit", saveSettings);
+  els.logoUpload?.addEventListener("change", uploadBrandLogoNow);
   els.homepageForm?.addEventListener("submit", saveHomepageSettings);
   els.setHero?.addEventListener("click", setSelectedHero);
   els.clearHero?.addEventListener("click", clearManualHero);
@@ -447,6 +448,21 @@ async function uploadBrandLogoIfNeeded() {
   els.logoUrl.value = data.url;
   els.logoUpload.value = "";
   return data.url;
+}
+
+async function uploadBrandLogoNow() {
+  const file = els.logoUpload?.files?.[0];
+  if (!file) return;
+  setStatus("Upload logo...", "running");
+  try {
+    const data = await uploadAdminAsset(file, "logo", "Gagal upload logo.");
+    els.logoUrl.value = data.url;
+    settingsCache.logoUrl = data.url;
+    els.logoUpload.value = "";
+    setStatus("Logo terupload. Klik Save Settings untuk memakai logo ini di website.", "");
+  } catch (error) {
+    setStatus(error.message, "error");
+  }
 }
 
 async function uploadAdminAsset(file, kind, errorText) {
