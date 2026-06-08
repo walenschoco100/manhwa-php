@@ -447,7 +447,11 @@ function setCanonical(href) {
     link.rel = "canonical";
     document.head.append(link);
   }
-  link.href = href.replace(/\/$/, "") + window.location.pathname;
+  link.href = href;
+}
+
+function setRobots(value = "index,follow") {
+  setMeta("robots", value);
 }
 
 function renderSchema(data) {
@@ -479,17 +483,32 @@ function comicTypeLabel(comic) {
   return String(comic?.type || "manga").toLowerCase();
 }
 
-function updatePageSeo({ title, description, image = "" }) {
+function updatePageSeo({ title, description, image = "", canonical = "", robots = "index,follow", type = "website" }) {
+  const canonicalUrl = canonical || currentCanonicalUrl();
+  const imageUrl = image || state.settings.ogImageUrl || state.settings.logoUrl || defaultBrandAssets.logo;
   if (title) document.title = title;
   if (description) {
     setMeta("description", description);
     setMeta("og:description", description, "property");
+    setMeta("twitter:description", description);
   }
   if (title) setMeta("og:title", title, "property");
-  if (image || state.settings.ogImageUrl || state.settings.logoUrl) {
-    setMeta("og:image", image || state.settings.ogImageUrl || state.settings.logoUrl || defaultBrandAssets.logo, "property");
+  if (title) setMeta("twitter:title", title);
+  setMeta("og:type", type, "property");
+  setMeta("og:url", canonicalUrl, "property");
+  setMeta("twitter:card", "summary_large_image");
+  if (imageUrl) {
+    setMeta("og:image", imageUrl, "property");
+    setMeta("twitter:image", imageUrl);
   }
-  setCanonical(state.settings.canonicalUrl || "");
+  setRobots(robots);
+  setCanonical(canonicalUrl);
+}
+
+function currentCanonicalUrl() {
+  const base = String(state.settings.canonicalUrl || window.location.origin).replace(/\/+$/, "");
+  const path = `${window.location.pathname}${window.location.search}`.replace(/\/index\.html$/i, "/");
+  return `${base}${path === "/" ? "" : path}`;
 }
 
 function detailSeoDescription(comic) {
@@ -816,7 +835,8 @@ function renderSearchPage(rawQuery) {
   updatePageSeo({
     title: query ? `Hasil pencarian ${query} - ${siteName()}` : `Hasil Pencarian - ${siteName()}`,
     description: query ? `Daftar komik yang cocok dengan pencarian ${query}.` : `Cari judul manhwa, manga, dan manhua di ${siteName()}.`,
-    image: state.settings.ogImageUrl || state.settings.logoUrl || defaultBrandAssets.logo
+    image: state.settings.ogImageUrl || state.settings.logoUrl || defaultBrandAssets.logo,
+    robots: "noindex,follow"
   });
   requestAnimationFrame(() => document.querySelector("#update")?.scrollIntoView({ behavior: "smooth", block: "start" }));
 }
@@ -1056,7 +1076,8 @@ function renderDetailPage(slug) {
   updatePageSeo({
     title: `${comic.title} - ${siteNameValue}`,
     description: detailSeoDescription(comic),
-    image: assetSrc(coverImage)
+    image: assetSrc(coverImage),
+    type: "article"
   });
   renderSchema({
     "@context": "https://schema.org",
@@ -1221,7 +1242,8 @@ function renderReaderPage(slug, chapterSlug) {
   updatePageSeo({
     title: formatReaderTitle(comic, chapter),
     description: readerSeoDescription(comic, chapter),
-    image: assetSrc(comic.cover || comic.image || chapter.images?.[0] || "")
+    image: assetSrc(comic.cover || comic.image || chapter.images?.[0] || ""),
+    type: "article"
   });
   renderSchema({
     "@context": "https://schema.org",

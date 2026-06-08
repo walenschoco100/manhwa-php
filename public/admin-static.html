@@ -488,7 +488,23 @@
 
         <section class="admin-panel" id="pagesPanel"><div class="panel-card empty-panel">Create Pages akan disiapkan setelah struktur halaman final.</div></section>
         <section class="admin-panel" id="menuPanel"><div class="panel-card empty-panel">Generate Menu akan disiapkan setelah menu custom aktif.</div></section>
-        <section class="admin-panel" id="sitemapPanel"><div class="panel-card empty-panel">Sitemap akan mengikuti data manhwa yang tersimpan.</div></section>
+        <section class="admin-panel" id="sitemapPanel">
+          <div class="panel-card settings-form">
+            <h1><span>◫</span> Sitemap & Robots</h1>
+            <p>Sitemap otomatis mengikuti data judul dan chapter yang sudah punya gambar tersimpan. Robots.txt memakai Canonical Base URL dari menu SEO.</p>
+            <div class="big-actions">
+              <a class="secondary" href="/sitemap.xml" target="_blank">Preview sitemap.xml</a>
+              <a class="secondary" href="/robots.txt" target="_blank">Preview robots.txt</a>
+              <a class="secondary" href="/admin/seo">Edit SEO Settings</a>
+            </div>
+            <div class="tool-output">
+              <strong>Yang otomatis masuk sitemap:</strong>
+              <span>Homepage</span>
+              <span>Semua halaman manga/detail</span>
+              <span>Chapter reader yang sudah punya gambar</span>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
 

@@ -105,6 +105,18 @@ final class TitleRepository
         return $stmt->fetchAll();
     }
 
+    public function chaptersWithImageCounts(int $titleId): array
+    {
+        $stmt = $this->db->prepare(
+            'SELECT c.*, (SELECT COUNT(*) FROM chapter_images ci WHERE ci.chapter_id = c.id) AS image_count
+             FROM chapters c
+             WHERE c.title_id = :title_id
+             ORDER BY COALESCE(c.number_value, c.id) DESC, c.id DESC'
+        );
+        $stmt->execute(['title_id' => $titleId]);
+        return $stmt->fetchAll();
+    }
+
     public function chapter(string $titleSlug, string $chapterSlug): ?array
     {
         $stmt = $this->db->prepare(
