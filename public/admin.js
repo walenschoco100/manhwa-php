@@ -414,18 +414,7 @@ async function saveSettings(event) {
     const response = await fetch("/api/settings", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        siteTitle: els.siteTitle.value,
-        metaDescription: els.metaDescription.value,
-        metaKeywords: els.metaKeywords.value,
-        footerText: els.footerText.value,
-        headerLogoText: els.headerLogoText.value,
-        logoUrl,
-        brandLogoMode: els.brandLogoMode?.value || "image-text",
-        faviconUrl: els.faviconUrl.value,
-        ogImageUrl: els.ogImageUrl?.value || settingsCache.ogImageUrl || "",
-        themePalette: readThemeInputs()
-      })
+      body: JSON.stringify(globalSettingsPayload(logoUrl))
     });
     const data = await readApiJson(response, "Gagal membaca respons settings.");
     if (!response.ok || !data.ok) {
@@ -457,12 +446,26 @@ async function uploadBrandLogoNow() {
   try {
     const data = await uploadAdminAsset(file, "logo", "Gagal upload logo.");
     els.logoUrl.value = data.url;
-    settingsCache.logoUrl = data.url;
     els.logoUpload.value = "";
-    setStatus("Logo terupload. Klik Save Settings untuk memakai logo ini di website.", "");
+    await saveSettingsPayload(globalSettingsPayload(data.url), "Logo terupload dan settings tersimpan.");
   } catch (error) {
     setStatus(error.message, "error");
   }
+}
+
+function globalSettingsPayload(logoUrl = els.logoUrl?.value || settingsCache.logoUrl || "") {
+  return {
+    siteTitle: els.siteTitle.value,
+    metaDescription: els.metaDescription.value,
+    metaKeywords: els.metaKeywords.value,
+    footerText: els.footerText.value,
+    headerLogoText: els.headerLogoText.value,
+    logoUrl,
+    brandLogoMode: els.brandLogoMode?.value || "image-text",
+    faviconUrl: els.faviconUrl.value,
+    ogImageUrl: els.ogImageUrl?.value || settingsCache.ogImageUrl || "",
+    themePalette: readThemeInputs()
+  };
 }
 
 async function uploadAdminAsset(file, kind, errorText) {
