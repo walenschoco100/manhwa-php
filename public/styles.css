@@ -4020,3 +4020,57 @@ body {
 .shinigami-layout .update-controls .view-tabs {
   margin: 0;
 }
+
+.shin-header .shin-inner {
+  min-width: 0;
+}
+
+.shin-header .shin-brand {
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.shin-header .shin-search {
+  min-width: 0;
+  max-width: 100%;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.shin-header .shin-search input {
+  min-width: 0;
+  width: 100%;
+}
+
+.shin-header .shin-search button {
+  white-space: nowrap;
+}
+
+@media (min-width: 761px) {
+  .shin-header .shin-search {
+    flex: 0 1 340px;
+  }
+}
+
+@media (max-width: 760px) {
+  .shin-header .shin-inner {
+    align-items: stretch;
+    flex-direction: column;
+    height: auto;
+  }
+
+  .shin-header .shin-brand {
+    align-self: center;
+    max-width: 100%;
+  }
+
+  .shin-header .shin-search {
+    width: 100%;
+  }
+
+  .shin-header .search-suggestions {
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+}
