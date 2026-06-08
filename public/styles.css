@@ -4395,3 +4395,82 @@ body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only .shin-log
     height: 52px !important;
   }
 }
+
+@media (max-width: 760px) {
+  .shin-header,
+  body.brand-logo-image-only .shin-header,
+  body.mobile-search-open .shin-header,
+  body.mobile-search-open.brand-logo-image-only .shin-header {
+    min-height: 56px;
+    overflow: visible;
+  }
+
+  .shin-header .shin-inner,
+  body.brand-logo-image-only .shin-header .shin-inner,
+  body.mobile-search-open .shin-header .shin-inner,
+  body.mobile-search-open.brand-logo-image-only .shin-header .shin-inner {
+    width: min(100% - 24px, 1180px);
+    min-height: 56px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 40px;
+    align-items: center;
+    gap: 10px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+
+  .shin-header .shin-brand {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .shin-header .shin-brand-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  body.brand-logo-image-only .shin-header .shin-brand.brand-image-only {
+    width: min(58vw, 220px) !important;
+    height: 44px !important;
+  }
+
+  body.brand-logo-image-only .shin-header .shin-brand.brand-image-only .shin-logo.has-logo-image {
+    height: 44px !important;
+    max-height: 44px !important;
+  }
+
+  .mobile-search-toggle {
+    width: 40px;
+    height: 40px;
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .shin-header .shin-search {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 12px;
+    right: 12px;
+    z-index: 60;
+    display: none;
+    width: auto;
+    min-height: 38px;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, .38);
+  }
+
+  body.mobile-search-open .shin-header .shin-search {
+    display: grid;
+  }
+
+  .shin-header .search-suggestions {
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+}
