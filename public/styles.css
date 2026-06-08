@@ -4142,12 +4142,12 @@ body {
 }
 
 body.brand-logo-image-only .shin-header {
-  min-height: 112px;
+  min-height: 92px;
   overflow: hidden;
 }
 
 body.brand-logo-image-only .shin-header .shin-inner {
-  min-height: 112px;
+  min-height: 92px;
   align-items: center;
   flex-wrap: nowrap;
   gap: 18px;
@@ -4156,16 +4156,16 @@ body.brand-logo-image-only .shin-header .shin-inner {
 }
 
 body.brand-logo-image-only .shin-header .shin-brand.brand-image-only {
-  width: clamp(260px, 34vw, 480px) !important;
-  height: 92px !important;
+  width: clamp(260px, 30vw, 420px) !important;
+  height: 76px !important;
   overflow: hidden !important;
 }
 
 body.brand-logo-image-only .shin-header .shin-brand.brand-image-only .shin-logo.has-logo-image {
   width: 100% !important;
-  height: 92px !important;
+  height: 76px !important;
   max-width: 100% !important;
-  max-height: 92px !important;
+  max-height: 76px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -4173,25 +4173,25 @@ body.brand-logo-image-only .shin-header .shin-brand.brand-image-only .shin-logo.
 }
 
 body.brand-logo-image-only .shin-header .shin-brand.brand-image-only .shin-logo.has-logo-image img {
-  width: auto !important;
-  height: auto !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-  object-fit: scale-down !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: contain !important;
   object-position: center !important;
 }
 
 body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only {
-  width: clamp(220px, 30vw, 420px) !important;
-  height: 82px !important;
+  width: clamp(220px, 26vw, 360px) !important;
+  height: 68px !important;
   overflow: hidden !important;
 }
 
 body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only .shin-logo.has-logo-image {
   width: 100% !important;
-  height: 82px !important;
+  height: 68px !important;
   max-width: 100% !important;
-  max-height: 82px !important;
+  max-height: 68px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -4199,33 +4199,33 @@ body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only .shin-log
 }
 
 body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only .shin-logo.has-logo-image img {
-  width: auto !important;
-  height: auto !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-  object-fit: scale-down !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: contain !important;
   object-position: center !important;
 }
 
 @media (max-width: 760px) {
   body.brand-logo-image-only .shin-header {
-    min-height: 154px;
+    min-height: 138px;
     overflow: hidden;
   }
 
   body.brand-logo-image-only .shin-header .shin-inner {
-    min-height: 154px;
+    min-height: 138px;
     flex-wrap: wrap;
   }
 
   body.brand-logo-image-only .shin-header .shin-brand.brand-image-only {
-    width: min(88vw, 420px) !important;
-    height: 88px !important;
+    width: min(88vw, 360px) !important;
+    height: 72px !important;
   }
 
   body.brand-logo-image-only .shin-header .shin-brand.brand-image-only .shin-logo.has-logo-image {
-    height: 88px !important;
-    max-height: 88px !important;
+    height: 72px !important;
+    max-height: 72px !important;
   }
 
   body.brand-logo-image-only .shin-header .shin-search {
@@ -4233,12 +4233,12 @@ body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only .shin-log
   }
 
   body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only {
-    width: min(86vw, 380px) !important;
-    height: 78px !important;
+    width: min(86vw, 340px) !important;
+    height: 66px !important;
   }
 
   body.brand-logo-image-only .shin-footer .footer-brand.brand-image-only .shin-logo.has-logo-image {
-    height: 78px !important;
-    max-height: 78px !important;
+    height: 66px !important;
+    max-height: 66px !important;
   }
 }
