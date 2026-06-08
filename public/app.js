@@ -59,6 +59,7 @@ const els = {
   siteFooter: document.querySelector("#siteFooter"),
   searchForm: document.querySelector("#searchForm"),
   searchInput: document.querySelector("#searchInput"),
+  mobileSearchToggle: document.querySelector("#mobileSearchToggle"),
   searchSuggestions: document.querySelector("#searchSuggestions"),
   genreFilter: document.querySelector("#genreFilter"),
   statusFilter: document.querySelector("#statusFilter"),
@@ -130,7 +131,15 @@ function bindEvents() {
     state.query = rawQuery.toLowerCase();
     state.catalogPage = 1;
     hideSearchSuggestions();
+    setMobileSearchOpen(false);
     navigate(rawQuery ? `/search?q=${encodeURIComponent(rawQuery)}` : "/#update");
+  });
+
+  els.mobileSearchToggle?.addEventListener("click", () => {
+    const isOpen = document.body.classList.toggle("mobile-search-open");
+    els.mobileSearchToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    if (isOpen) requestAnimationFrame(() => els.searchInput?.focus());
+    if (!isOpen) hideSearchSuggestions();
   });
 
   els.searchInput?.addEventListener("input", event => {
@@ -835,6 +844,11 @@ function hideSearchSuggestions() {
   if (!els.searchSuggestions) return;
   els.searchSuggestions.hidden = true;
   els.searchSuggestions.innerHTML = "";
+}
+
+function setMobileSearchOpen(isOpen) {
+  document.body.classList.toggle("mobile-search-open", isOpen);
+  els.mobileSearchToggle?.setAttribute("aria-expanded", isOpen ? "true" : "false");
 }
 
 function catalogPageSize() {

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ManhwaLanded - Portal Manhwa</title>
     <link rel="icon" href="/assets/brand/default-favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/styles.css?v=20260608-navbar-logo-contain">
+    <link rel="stylesheet" href="/styles.css?v=20260608-mobile-search-toggle">
   </head>
   <body class="shinigami-layout">
     <div class="age-gate" id="ageGate" role="dialog" aria-modal="true" aria-labelledby="ageTitle">
@@ -31,6 +31,9 @@
           <button type="submit" aria-label="Cari">Cari</button>
           <div class="search-suggestions" id="searchSuggestions" hidden></div>
         </form>
+        <button class="mobile-search-toggle" id="mobileSearchToggle" type="button" aria-label="Buka pencarian" aria-expanded="false">
+          <span aria-hidden="true"></span>
+        </button>
       </div>
     </header>
 
@@ -164,6 +167,6 @@
       <a href="/#popular" data-route data-nav="popular"><span>Populer</span></a>
     </nav>
 
-    <script src="/app.js?v=20260608-navbar-logo-contain" type="module"></script>
+    <script src="/app.js?v=20260608-mobile-search-toggle" type="module"></script>
   </body>
 </html>
