@@ -493,11 +493,31 @@ function updatePageSeo({ title, description, image = "" }) {
 }
 
 function detailSeoDescription(comic) {
-  return `Baca ${comicTypeLabel(comic)} ${comic.title} bahasa Indonesia di ${siteName()}. Lihat daftar chapter lengkap, genre, status, dan update terbaru.`;
+  const fallback = `Baca ${comicTypeLabel(comic)} ${comic.title} bahasa Indonesia di ${siteName()}. Lihat daftar chapter lengkap, genre, status, dan update terbaru.`;
+  return renderSeoTemplate(state.settings.mangaDescriptionTemplate, comic, null, fallback);
 }
 
 function readerSeoDescription(comic, chapter) {
-  return `Baca ${comicTypeLabel(comic)} ${comic.title} ${cleanChapterTitle(chapter.title)} bahasa Indonesia di ${siteName()}. Nikmati chapter lengkap dengan gambar yang sudah tersimpan.`;
+  const fallback = `Baca ${comicTypeLabel(comic)} ${comic.title} ${cleanChapterTitle(chapter.title)} bahasa Indonesia di ${siteName()}. Nikmati chapter lengkap dengan gambar yang sudah tersimpan.`;
+  return renderSeoTemplate(state.settings.chapterDescriptionTemplate, comic, chapter, fallback);
+}
+
+function renderSeoTemplate(template, comic, chapter, fallback) {
+  const raw = String(template || "").trim();
+  if (!raw) return fallback;
+  const chapterTitle = chapter ? cleanChapterTitle(chapter.title) : "";
+  const values = {
+    title: comic?.title || "",
+    type: comicTypeLabel(comic),
+    site: siteName(),
+    genres: (comic?.genres || []).join(", "),
+    status: comic?.status || "",
+    author: comic?.author || "",
+    chapter: chapterTitle,
+    chapter_title: chapterTitle,
+    chapter_number: chapter ? String(chapterNumber(chapter.title) || "") : ""
+  };
+  return raw.replace(/\{([a-z_]+)\}/gi, (match, key) => values[key.toLowerCase()] ?? "").replace(/\s+/g, " ").trim();
 }
 
 function hydrateFilters() {

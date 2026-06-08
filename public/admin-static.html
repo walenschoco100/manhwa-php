@@ -6,7 +6,7 @@
     <meta name="robots" content="noindex,nofollow,noarchive">
     <title>Manhwa Scraper Admin</title>
     <link rel="icon" href="/assets/brand/default-favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/admin.css?v=20260608-logo-autosave">
+    <link rel="stylesheet" href="/admin.css?v=20260608-seo-description-templates">
   </head>
   <body class="admin-page">
     <header class="admin-topbar">
@@ -66,6 +66,18 @@
               <strong>Meta Keywords Homepage</strong>
               <textarea id="metaKeywordsInput" rows="3" placeholder="manhwa, manga, manhua"></textarea>
               <small>Keyword global untuk halaman website.</small>
+            </label>
+
+            <label>
+              <strong>Deskripsi Halaman Manga</strong>
+              <textarea id="mangaDescriptionTemplateInput" rows="4" placeholder="Baca {type} {title} bahasa Indonesia di {site}. Lihat daftar chapter lengkap, genre {genres}, status {status}, dan update terbaru."></textarea>
+              <small>Template meta description halaman detail manga. Placeholder: {title}, {type}, {site}, {genres}, {status}, {author}.</small>
+            </label>
+
+            <label>
+              <strong>Deskripsi Halaman Chapter</strong>
+              <textarea id="chapterDescriptionTemplateInput" rows="4" placeholder="Baca {type} {title} {chapter} bahasa Indonesia di {site}. Nikmati chapter lengkap dengan gambar yang sudah tersimpan."></textarea>
+              <small>Template meta description halaman baca chapter. Placeholder: {title}, {chapter}, {chapter_title}, {chapter_number}, {type}, {site}, {genres}, {status}.</small>
             </label>
 
             <label>
@@ -482,6 +494,6 @@
 
     <footer class="admin-footer"><a href="/">Manhwa Scraper</a> Admin Dashboard</footer>
 
-    <script src="/admin.js?v=20260608-logo-autosave" type="module"></script>
+    <script src="/admin.js?v=20260608-seo-description-templates" type="module"></script>
   </body>
 </html>

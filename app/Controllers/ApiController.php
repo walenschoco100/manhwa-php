@@ -518,6 +518,8 @@ final class ApiController
             'siteTitle' => setting('site_name', 'ManhwaLanded - Portal Manhwa'),
             'metaDescription' => setting('site_description', 'Baca manhwa, manga, dan manhua bahasa Indonesia dengan update chapter terbaru.'),
             'metaKeywords' => 'manhwa, manga, manhua, komik',
+            'mangaDescriptionTemplate' => 'Baca {type} {title} bahasa Indonesia di {site}. Lihat daftar chapter lengkap, genre {genres}, status {status}, dan update terbaru.',
+            'chapterDescriptionTemplate' => 'Baca {type} {title} {chapter} bahasa Indonesia di {site}. Nikmati chapter lengkap dengan gambar yang sudah tersimpan.',
             'footerText' => 'Copyright ©2026 MANHWALANDED. All rights reserved.',
             'headerLogoText' => 'MANHWALANDED',
             'logoUrl' => '/assets/brand/default-logo.svg',

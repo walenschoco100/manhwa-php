@@ -30,6 +30,8 @@ const els = {
   siteTitle: document.querySelector("#siteTitleInput"),
   metaDescription: document.querySelector("#metaDescriptionInput"),
   metaKeywords: document.querySelector("#metaKeywordsInput"),
+  mangaDescriptionTemplate: document.querySelector("#mangaDescriptionTemplateInput"),
+  chapterDescriptionTemplate: document.querySelector("#chapterDescriptionTemplateInput"),
   footerText: document.querySelector("#footerTextInput"),
   headerLogoText: document.querySelector("#headerLogoTextInput"),
   logoUrl: document.querySelector("#logoUrlInput"),
@@ -380,6 +382,8 @@ async function loadSettings() {
   els.siteTitle.value = settings.siteTitle || "";
   els.metaDescription.value = settings.metaDescription || "";
   els.metaKeywords.value = settings.metaKeywords || "";
+  if (els.mangaDescriptionTemplate) els.mangaDescriptionTemplate.value = settings.mangaDescriptionTemplate || "";
+  if (els.chapterDescriptionTemplate) els.chapterDescriptionTemplate.value = settings.chapterDescriptionTemplate || "";
   els.footerText.value = settings.footerText || "";
   els.headerLogoText.value = settings.headerLogoText || "";
   els.logoUrl.value = settings.logoUrl || "";
@@ -458,6 +462,8 @@ function globalSettingsPayload(logoUrl = els.logoUrl?.value || settingsCache.log
     siteTitle: els.siteTitle.value,
     metaDescription: els.metaDescription.value,
     metaKeywords: els.metaKeywords.value,
+    mangaDescriptionTemplate: els.mangaDescriptionTemplate?.value || "",
+    chapterDescriptionTemplate: els.chapterDescriptionTemplate?.value || "",
     footerText: els.footerText.value,
     headerLogoText: els.headerLogoText.value,
     logoUrl,
